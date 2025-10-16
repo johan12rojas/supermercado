@@ -105,14 +105,14 @@ app.get('/api/orders', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { items } = req.body; // [{ productId, quantity }]
+  const { items, userId } = req.body; // [{ productId, quantity }, userId]
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items es requerido' });
   }
 
   const getForUpdate = db.prepare('SELECT * FROM products WHERE id = ?');
   const updateStock = db.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
-  const insertOrder = db.prepare('INSERT INTO orders (total) VALUES (?)');
+  const insertOrder = db.prepare('INSERT INTO orders (total, user_id) VALUES (?, ?)');
   const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
 
   try {
@@ -127,7 +127,7 @@ app.post('/api/orders', (req, res) => {
         if (p.stock < qty) throw new Error(`Stock insuficiente para ${p.name}`);
         total += p.price * qty;
       }
-      const orderInfo = insertOrder.run(total);
+      const orderInfo = insertOrder.run(total, userId);
       const orderId = orderInfo.lastInsertRowid;
       for (const it of items) {
         const p = getForUpdate.get(it.productId);

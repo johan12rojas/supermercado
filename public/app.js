@@ -267,12 +267,17 @@ const api = {
     }
   },
   
-  async createOrder(items) {
+  async createOrder(items, userId = null) {
     try {
+      const payload = { items };
+      if (userId) {
+        payload.userId = userId;
+      }
+      
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items })
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
@@ -503,6 +508,10 @@ const auth = {
   
   isAdmin() {
     return this.currentUser && this.currentUser.isAdmin === 1;
+  },
+  
+  getCurrentUser() {
+    return this.currentUser;
   }
 };
 
@@ -831,7 +840,12 @@ async function bootIndex() {
       
       try {
         const payload = items.map(i => ({ productId: i.productId, quantity: i.quantity }));
-        const order = await api.createOrder(payload);
+        
+        // Obtener userId del usuario logueado si existe
+        const currentUser = auth.getCurrentUser();
+        const userId = currentUser ? currentUser.id : null;
+        
+        const order = await api.createOrder(payload, userId);
         alert('Pedido creado #' + order.id + ' por ' + ui.money(order.total));
         cart.clear();
         ui.renderCart();

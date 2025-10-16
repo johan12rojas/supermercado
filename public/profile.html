@@ -88,18 +88,51 @@
       </div>
       <div class="stats-grid">
         <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <h3>Total de Pedidos</h3>
+            <p id="totalOrdersCount">0</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <h3>Total Gastado</h3>
+            <p id="totalSpentAmount">$0.00</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <h3>Promedio por Pedido</h3>
+            <p id="avgOrderValue">$0.00</p>
+          </div>
+        </div>
+        <div class="stat-card">
           <div class="stat-icon">📅</div>
           <div class="stat-content">
             <h3>Último Pedido</h3>
             <p id="lastOrderDate">Nunca</p>
           </div>
         </div>
-        <div class="stat-card">
+      </div>
+      
+      <div class="charts-grid">
+        <div class="chart-card">
           <div class="stat-icon">📈</div>
           <div class="stat-content">
             <h3>Tendencia Mensual</h3>
             <div id="monthlyChart" class="chart-container">
               <!-- Gráfico se generará aquí -->
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="stat-icon">🥗</div>
+          <div class="stat-content">
+            <h3>Categorías de Productos</h3>
+            <div id="categoryChart" class="circular-chart-container">
+              <!-- Gráfico circular se generará aquí -->
             </div>
           </div>
         </div>
@@ -113,7 +146,7 @@
         <div class="section-icon">💰</div>
       </div>
       <div class="expenses-grid">
-        <div class="expense-card">
+        <div class="expense-card budget-card">
           <h3>Presupuesto Mensual</h3>
           <div class="budget-controls">
             <input type="number" id="monthlyBudget" placeholder="Presupuesto mensual" min="0" step="0.01">
@@ -126,7 +159,7 @@
             <p id="budgetText">Presupuesto no establecido</p>
           </div>
         </div>
-        <div class="expense-card">
+        <div class="expense-card analysis-card">
           <h3>Análisis de Gastos</h3>
           <div class="expense-analysis">
             <div class="analysis-item">
@@ -140,6 +173,38 @@
             <div class="analysis-item">
               <span>Gasto total este mes:</span>
               <span id="monthlyExpense">$0</span>
+            </div>
+          </div>
+        </div>
+        <div class="expense-card recommendations-card">
+          <h3>💡 Recomendaciones</h3>
+          <div id="recommendationsList" class="recommendations-list">
+            <!-- Las recomendaciones se generarán aquí -->
+          </div>
+        </div>
+        <div class="expense-card trends-card">
+          <h3>📈 Tendencias de Gastos</h3>
+          <div class="trends-content">
+            <div class="trend-item">
+              <div class="trend-icon">📊</div>
+              <div class="trend-info">
+                <h4>Proyección Mensual</h4>
+                <p id="monthlyProjection">Basado en tus gastos actuales</p>
+              </div>
+            </div>
+            <div class="trend-item">
+              <div class="trend-icon">🎯</div>
+              <div class="trend-info">
+                <h4>Meta de Ahorro</h4>
+                <p id="savingsGoal">Calculando tu potencial de ahorro</p>
+              </div>
+            </div>
+            <div class="trend-item">
+              <div class="trend-icon">📅</div>
+              <div class="trend-info">
+                <h4>Días Restantes</h4>
+                <p id="daysRemaining">Días hasta fin de mes</p>
+              </div>
             </div>
           </div>
         </div>
@@ -305,6 +370,29 @@
             minute: '2-digit'
           });
           
+          // Calcular cantidad de productos
+          let itemsCount = 0;
+          let itemsSummary = '';
+          
+          if (order.items_summary) {
+            // Usar el resumen si está disponible
+            itemsSummary = order.items_summary;
+            // Contar productos del resumen
+            itemsCount = (order.items_summary.match(/x\d+/g) || []).reduce((total, match) => {
+              return total + parseInt(match.replace('x', ''));
+            }, 0);
+          } else if (order.items) {
+            // Parsear JSON si está disponible
+            try {
+              const items = JSON.parse(order.items);
+              itemsCount = items.reduce((total, item) => total + item.quantity, 0);
+              itemsSummary = items.map(item => `${item.name} x${item.quantity}`).join(', ');
+            } catch (e) {
+              itemsCount = 0;
+              itemsSummary = 'Productos no disponibles';
+            }
+          }
+          
           return `
             <div class="order-item">
               <div class="order-header">
@@ -313,8 +401,9 @@
                 <span class="order-total">$${order.total.toFixed(2)}</span>
               </div>
               <div class="order-items">
-                <div class="order-status">Estado: Completado</div>
-                <div class="order-summary">${order.items_count || 0} productos</div>
+                <div class="order-status">Estado: ${order.status === 'completed' ? 'Completado' : order.status}</div>
+                <div class="order-summary">${itemsCount} productos</div>
+                <div class="order-details">${itemsSummary}</div>
               </div>
             </div>
           `;
@@ -333,38 +422,290 @@
       try {
         const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
         
-        // Actualizar estadísticas en la sección de stats
-        document.getElementById('lastOrderDate').textContent = stats.last_order_date ? 
-          new Date(stats.last_order_date).toLocaleDateString('es-ES') : 'Nunca';
-        
+        // Actualizar estadísticas básicas
         document.getElementById('totalOrdersCount').textContent = stats.total_orders || 0;
         document.getElementById('totalSpentAmount').textContent = '$' + (stats.total_spent || 0).toFixed(2);
         document.getElementById('avgOrderValue').textContent = '$' + (stats.avg_order_value || 0).toFixed(2);
+        document.getElementById('lastOrderDate').textContent = stats.last_order_date ? 
+          new Date(stats.last_order_date).toLocaleDateString('es-ES') : 'Nunca';
         
         // Generar gráfico simple de gastos mensuales
         const chartContainer = document.getElementById('monthlyChart');
         if (chartContainer) {
           if (stats.monthlyStats && stats.monthlyStats.length > 0) {
             const maxSpent = Math.max(...stats.monthlyStats.map(m => m.total_spent));
-            chartContainer.innerHTML = stats.monthlyStats.map(month => {
-              const height = maxSpent > 0 ? (month.total_spent / maxSpent) * 100 : 0;
-              return `
-                <div class="chart-bar">
-                  <div class="bar" style="height: ${height}%"></div>
-                  <span class="bar-label">${month.month}</span>
-                  <span class="bar-value">$${month.total_spent.toFixed(2)}</span>
-                </div>
-              `;
-            }).join('');
+            
+            chartContainer.innerHTML = `
+              <div class="chart-header">
+                <h4>Evolución de Gastos Mensuales</h4>
+                <div class="chart-subtitle">Comparación mes a mes</div>
+              </div>
+              <div class="chart-bars">
+                ${stats.monthlyStats.map((month, index) => {
+                  const height = maxSpent > 0 ? (month.total_spent / maxSpent) * 100 : 0;
+                  const monthName = new Date(month.month + '-01').toLocaleDateString('es-ES', { month: 'short' });
+                  const year = month.month.split('-')[0];
+                  const isCurrentMonth = index === 0;
+                  
+                  return `
+                    <div class="chart-bar">
+                      <div class="bar-container">
+                        <div class="bar" style="height: ${height}%" title="$${month.total_spent.toFixed(2)} en ${monthName} ${year}"></div>
+                        <div class="bar-value-overlay">$${month.total_spent.toFixed(2)}</div>
+                      </div>
+                      <span class="bar-label">${monthName}</span>
+                      <span class="bar-year">${year}</span>
+                      ${isCurrentMonth ? '<span class="current-month">Actual</span>' : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `;
           } else {
             chartContainer.innerHTML = '<div class="empty-state">No hay datos suficientes para mostrar el gráfico</div>';
           }
         }
+        
+        // Generar gráfico circular de categorías
+        loadCategoryChart(userId);
+        
       } catch (error) {
         console.error('Error cargando estadísticas:', error);
         const chartContainer = document.getElementById('monthlyChart');
         if (chartContainer) {
           chartContainer.innerHTML = '<div class="empty-state">Error cargando estadísticas</div>';
+        }
+      }
+    }
+    
+    async function loadCategoryChart(userId) {
+      try {
+        // Obtener órdenes del usuario para analizar categorías
+        const orders = await fetch(`/api/orders/${userId}`).then(r => r.json());
+        const categoryChart = document.getElementById('categoryChart');
+        
+        if (!orders || orders.length === 0) {
+          categoryChart.innerHTML = '<div class="empty-state">No hay datos suficientes para mostrar el gráfico</div>';
+          return;
+        }
+        
+        // Analizar categorías de productos comprados
+        const categoryStats = {};
+        let totalProducts = 0;
+        
+        orders.forEach(order => {
+          if (order.items_summary) {
+            // Parsear items_summary (formato: "Producto x1 ($precio), Producto x2 ($precio)")
+            const items = order.items_summary.split(', ');
+            items.forEach(item => {
+              const match = item.match(/^(.+?)\s+x(\d+)/);
+              if (match) {
+                const productName = match[1].toLowerCase();
+                const quantity = parseInt(match[2]);
+                
+                // Categorización mejorada
+                let category = 'Otros';
+                if (productName.includes('manzana') || productName.includes('banana') || productName.includes('naranja') || productName.includes('fresa') || productName.includes('uva') || productName.includes('fruta')) {
+                  category = 'Frutas';
+                } else if (productName.includes('leche') || productName.includes('queso') || productName.includes('yogur') || productName.includes('lácteo')) {
+                  category = 'Lácteos';
+                } else if (productName.includes('pan') || productName.includes('galleta') || productName.includes('torta') || productName.includes('panadería')) {
+                  category = 'Panadería';
+                } else if (productName.includes('huevo')) {
+                  category = 'Huevos';
+                } else if (productName.includes('agua') || productName.includes('jugo') || productName.includes('bebida') || productName.includes('té') || productName.includes('refresco')) {
+                  category = 'Bebidas';
+                } else if (productName.includes('verdura') || productName.includes('vegetal') || productName.includes('lechuga') || productName.includes('tomate')) {
+                  category = 'Verduras';
+                } else if (productName.includes('carne') || productName.includes('pollo') || productName.includes('pescado') || productName.includes('jamón')) {
+                  category = 'Carnes';
+                }
+                
+                if (!categoryStats[category]) {
+                  categoryStats[category] = 0;
+                }
+                categoryStats[category] += quantity;
+                totalProducts += quantity;
+              }
+            });
+          } else if (order.items) {
+            // Parsear JSON si está disponible
+            try {
+              const items = JSON.parse(order.items);
+              items.forEach(item => {
+                let category = 'Otros';
+                const productName = item.name.toLowerCase();
+                
+                if (productName.includes('manzana') || productName.includes('banana') || productName.includes('naranja') || productName.includes('fresa') || productName.includes('uva')) {
+                  category = 'Frutas';
+                } else if (productName.includes('leche') || productName.includes('queso') || productName.includes('yogur')) {
+                  category = 'Lácteos';
+                } else if (productName.includes('pan') || productName.includes('galleta') || productName.includes('torta')) {
+                  category = 'Panadería';
+                } else if (productName.includes('huevo')) {
+                  category = 'Huevos';
+                } else if (productName.includes('agua') || productName.includes('jugo') || productName.includes('bebida')) {
+                  category = 'Bebidas';
+                }
+                
+                if (!categoryStats[category]) {
+                  categoryStats[category] = 0;
+                }
+                categoryStats[category] += item.quantity;
+                totalProducts += item.quantity;
+              });
+            } catch (e) {
+              console.error('Error parsing order items:', e);
+            }
+          }
+        });
+        
+        if (totalProducts === 0) {
+          categoryChart.innerHTML = '<div class="empty-state">No hay productos para mostrar</div>';
+          return;
+        }
+        
+        // Generar gráfico circular con lógica corregida
+        const colors = ['#14b8a6', '#ff6b5a', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
+        const categories = Object.keys(categoryStats);
+        
+        // Ordenar categorías por cantidad (mayor a menor) para mejor visualización
+        const sortedCategories = categories.sort((a, b) => categoryStats[b] - categoryStats[a]);
+        
+        let currentAngle = 0;
+        const radius = 80;
+        const centerX = 110;
+        const centerY = 110;
+        
+        // Crear círculos para cada categoría con cálculo correcto de ángulos
+        const svgCircles = sortedCategories.map((category, index) => {
+          const count = categoryStats[category];
+          const percentage = (count / totalProducts) * 100;
+          const angle = (percentage / 100) * 360;
+          const circumference = 2 * Math.PI * radius;
+          const strokeDasharray = `${(angle / 360) * circumference} ${circumference}`;
+          
+          // Calcular el offset correcto
+          const offset = -currentAngle * circumference / 360;
+          
+          const circle = `<circle 
+            class="progress" 
+            cx="${centerX}" 
+            cy="${centerY}" 
+            r="${radius}" 
+            stroke="${colors[index % colors.length]}" 
+            stroke-dasharray="${strokeDasharray}" 
+            stroke-dashoffset="${offset}"
+            data-category="${category}"
+            data-count="${count}"
+            data-percentage="${percentage.toFixed(1)}"
+          />`;
+          
+          currentAngle += angle;
+          return circle;
+        }).join('');
+        
+        // Crear leyenda con colores correctos
+        const legend = sortedCategories.map((category, index) => `
+          <div class="circular-legend-item">
+            <div class="circular-legend-color" style="background: ${colors[index % colors.length]}"></div>
+            <span>${category} (${categoryStats[category]})</span>
+          </div>
+        `).join('');
+        
+        categoryChart.innerHTML = `
+          <div class="circular-chart">
+            <svg width="220" height="220">
+              <circle class="background" cx="${centerX}" cy="${centerY}" r="${radius}" />
+              ${svgCircles}
+            </svg>
+            <div class="chart-center">
+              <div class="chart-center-value">${totalProducts}</div>
+              <div class="chart-center-label">productos</div>
+            </div>
+          </div>
+          <div class="circular-legend">
+            ${legend}
+          </div>
+        `;
+        
+        // Agregar interactividad mejorada
+        const chartSvg = categoryChart.querySelector('svg');
+        const circles = chartSvg.querySelectorAll('.progress');
+        
+        circles.forEach(circle => {
+          circle.addEventListener('mouseenter', function() {
+            const category = this.getAttribute('data-category');
+            const count = this.getAttribute('data-count');
+            const percentage = this.getAttribute('data-percentage');
+            
+            // Resaltar el círculo
+            this.style.strokeWidth = '20';
+            this.style.filter = 'drop-shadow(0 0 8px rgba(0,0,0,0.3))';
+            
+            // Mostrar tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'chart-tooltip';
+            tooltip.innerHTML = `
+              <strong>${category}</strong><br>
+              ${count} productos (${percentage}%)
+            `;
+            tooltip.style.position = 'absolute';
+            tooltip.style.background = 'var(--card)';
+            tooltip.style.border = '1px solid var(--line)';
+            tooltip.style.borderRadius = '8px';
+            tooltip.style.padding = '8px 12px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            tooltip.style.zIndex = '1000';
+            tooltip.style.pointerEvents = 'none';
+            
+            document.body.appendChild(tooltip);
+            
+            // Posicionar tooltip
+            const rect = this.getBoundingClientRect();
+            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+            tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+            
+            this.tooltip = tooltip;
+            
+            // Resaltar en la leyenda
+            const legendItems = categoryChart.querySelectorAll('.circular-legend-item');
+            legendItems.forEach(item => {
+              if (item.textContent.includes(category)) {
+                item.style.fontWeight = '700';
+                item.style.transform = 'scale(1.05)';
+                item.style.color = 'var(--text)';
+              }
+            });
+          });
+          
+          circle.addEventListener('mouseleave', function() {
+            // Quitar resaltado del círculo
+            this.style.strokeWidth = '16';
+            this.style.filter = 'none';
+            
+            // Remover tooltip
+            if (this.tooltip) {
+              document.body.removeChild(this.tooltip);
+              this.tooltip = null;
+            }
+            
+            // Quitar resaltado de la leyenda
+            const legendItems = categoryChart.querySelectorAll('.circular-legend-item');
+            legendItems.forEach(item => {
+              item.style.fontWeight = '500';
+              item.style.transform = 'scale(1)';
+              item.style.color = 'var(--muted)';
+            });
+          });
+        });
+        
+      } catch (error) {
+        console.error('Error cargando gráfico de categorías:', error);
+        const categoryChart = document.getElementById('categoryChart');
+        if (categoryChart) {
+          categoryChart.innerHTML = '<div class="empty-state">Error cargando gráfico de categorías</div>';
         }
       }
     }
@@ -392,9 +733,17 @@
         const monthlySpent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
           stats.monthlyStats[0].total_spent : 0;
         
-        document.getElementById('monthlySpent').textContent = '$' + monthlySpent.toFixed(2);
+        document.getElementById('monthlyExpense').textContent = '$' + monthlySpent.toFixed(2);
         document.getElementById('monthlyOrders').textContent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
           stats.monthlyStats[0].orders_count : 0;
+        document.getElementById('avgExpense').textContent = '$' + (stats.avg_order_value || 0).toFixed(2);
+        
+        // Generar recomendaciones inteligentes
+        generateRecommendations(stats, monthlySpent, stats.monthlyStats && stats.monthlyStats.length > 0 ? 
+          stats.monthlyStats[0].orders_count : 0);
+        
+        // Generar tendencias de gastos
+        generateExpenseTrends(stats, monthlySpent, monthlyOrders);
         
         // Actualizar presupuesto si existe
         const budget = localStorage.getItem(`budget_${userId}`);
@@ -416,6 +765,245 @@
       } catch (error) {
         console.error('Error cargando estadísticas de gastos:', error);
       }
+    }
+    
+    function generateRecommendations(stats, monthlySpent, monthlyOrders) {
+      const recommendationsList = document.getElementById('recommendationsList');
+      const recommendations = [];
+      
+      // Obtener presupuesto del usuario
+      const userId = localStorage.getItem('currentUserId');
+      const budget = localStorage.getItem(`budget_${userId}`);
+      const budgetAmount = budget ? parseFloat(budget) : 0;
+      
+      // Recomendación 1: Presupuesto
+      if (budgetAmount > 0) {
+        const budgetUsage = (monthlySpent / budgetAmount) * 100;
+        
+        if (budgetUsage > 90) {
+          recommendations.push({
+            icon: '⚠️',
+            title: 'Presupuesto casi agotado',
+            text: `Has gastado el ${budgetUsage.toFixed(1)}% de tu presupuesto mensual. Considera reducir gastos o ajustar tu presupuesto.`,
+            priority: 'high'
+          });
+        } else if (budgetUsage > 75) {
+          recommendations.push({
+            icon: '💡',
+            title: 'Presupuesto en zona de atención',
+            text: `Has gastado el ${budgetUsage.toFixed(1)}% de tu presupuesto. Te quedan $${(budgetAmount - monthlySpent).toFixed(2)} para el resto del mes.`,
+            priority: 'medium'
+          });
+        } else if (budgetUsage < 30) {
+          recommendations.push({
+            icon: '✅',
+            title: 'Excelente control de gastos',
+            text: `Solo has gastado el ${budgetUsage.toFixed(1)}% de tu presupuesto. ¡Sigue así!`,
+            priority: 'low'
+          });
+        }
+      } else {
+        recommendations.push({
+          icon: '📊',
+          title: 'Establece un presupuesto',
+          text: 'Configura un presupuesto mensual para tener mejor control de tus gastos y recibir recomendaciones personalizadas.',
+          priority: 'medium'
+        });
+      }
+      
+      // Recomendación 2: Frecuencia de pedidos
+      if (monthlyOrders > 10) {
+        recommendations.push({
+          icon: '🛒',
+          title: 'Muchos pedidos pequeños',
+          text: `Has hecho ${monthlyOrders} pedidos este mes. Considera hacer pedidos más grandes para ahorrar en envíos.`,
+          priority: 'medium'
+        });
+      } else if (monthlyOrders < 2 && monthlySpent > 0) {
+        recommendations.push({
+          icon: '💪',
+          title: 'Pedidos eficientes',
+          text: 'Haces pocos pedidos pero con buen valor. ¡Excelente estrategia de compra!',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 3: Valor promedio
+      const avgOrderValue = stats.avg_order_value || 0;
+      if (avgOrderValue < 5) {
+        recommendations.push({
+          icon: '💰',
+          title: 'Pedidos de bajo valor',
+          text: 'Tus pedidos tienen un valor promedio bajo. Considera agregar más productos para aprovechar mejor los envíos.',
+          priority: 'low'
+        });
+      } else if (avgOrderValue > 50) {
+        recommendations.push({
+          icon: '🎯',
+          title: 'Pedidos de alto valor',
+          text: 'Tus pedidos tienen un valor promedio alto. ¡Excelente para aprovechar ofertas y descuentos!',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 4: Tendencia temporal
+      if (stats.monthlyStats && stats.monthlyStats.length > 1) {
+        const currentMonth = stats.monthlyStats[0].total_spent;
+        const previousMonth = stats.monthlyStats[1].total_spent;
+        const change = ((currentMonth - previousMonth) / previousMonth) * 100;
+        
+        if (change > 50) {
+          recommendations.push({
+            icon: '📈',
+            title: 'Aumento significativo en gastos',
+            text: `Tus gastos aumentaron ${change.toFixed(1)}% respecto al mes anterior. Revisa si es necesario ajustar tu presupuesto.`,
+            priority: 'high'
+          });
+        } else if (change < -30) {
+          recommendations.push({
+            icon: '📉',
+            title: 'Reducción notable en gastos',
+            text: `Tus gastos disminuyeron ${Math.abs(change).toFixed(1)}% respecto al mes anterior. ¡Excelente trabajo!`,
+            priority: 'low'
+          });
+        }
+      }
+      
+      // Recomendación 5: Productos eco
+      recommendations.push({
+        icon: '🌱',
+        title: 'Compra productos eco',
+        text: 'Considera agregar más productos ecológicos a tus pedidos. Son mejores para el medio ambiente y tu salud.',
+        priority: 'low'
+      });
+      
+      // Recomendación 6: Días de la semana
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        recommendations.push({
+          icon: '📅',
+          title: 'Fin de semana inteligente',
+          text: 'Los fines de semana son ideales para hacer pedidos más grandes y planificar la semana. Aprovecha para ahorrar en envíos.',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 7: Horario de compra
+      const hour = today.getHours();
+      if (hour >= 9 && hour <= 11) {
+        recommendations.push({
+          icon: '⏰',
+          title: 'Horario óptimo',
+          text: 'Estás comprando en un horario ideal. Las entregas matutinas suelen ser más rápidas y confiables.',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 8: Estacionalidad
+      const month = today.getMonth();
+      if (month >= 5 && month <= 8) {
+        recommendations.push({
+          icon: '☀️',
+          title: 'Temporada de verano',
+          text: 'En verano, considera comprar más frutas frescas y bebidas. Es la temporada ideal para productos hidratantes.',
+          priority: 'low'
+        });
+      } else if (month >= 11 || month <= 1) {
+        recommendations.push({
+          icon: '❄️',
+          title: 'Temporada de invierno',
+          text: 'En invierno, considera productos que se conserven bien y bebidas calientes. Planifica compras más grandes.',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 9: Comparación con promedio general
+      if (avgOrderValue > 15) {
+        recommendations.push({
+          icon: '💎',
+          title: 'Comprador premium',
+          text: 'Tus pedidos tienen un valor alto. Considera programas de fidelidad o descuentos por volumen.',
+          priority: 'low'
+        });
+      }
+      
+      // Recomendación 10: Frecuencia óptima
+      const daysSinceLastOrder = stats.last_order_date ? 
+        Math.floor((new Date() - new Date(stats.last_order_date)) / (1000 * 60 * 60 * 24)) : 0;
+      
+      if (daysSinceLastOrder > 7) {
+        recommendations.push({
+          icon: '⏳',
+          title: 'Tiempo sin comprar',
+          text: `Han pasado ${daysSinceLastOrder} días desde tu último pedido. Considera hacer una compra para mantener productos frescos.`,
+          priority: 'medium'
+        });
+      } else if (daysSinceLastOrder < 2) {
+        recommendations.push({
+          icon: '🛒',
+          title: 'Comprador frecuente',
+          text: 'Haces compras muy frecuentes. Considera hacer pedidos más grandes para optimizar costos de envío.',
+          priority: 'medium'
+        });
+      }
+      
+      // Mostrar recomendaciones
+      if (recommendations.length === 0) {
+        recommendationsList.innerHTML = '<div class="empty-state">No hay recomendaciones disponibles en este momento</div>';
+      } else {
+        recommendationsList.innerHTML = recommendations.map(rec => `
+          <div class="recommendation-item">
+            <div class="recommendation-icon">${rec.icon}</div>
+            <div class="recommendation-content">
+              <div class="recommendation-title">${rec.title}</div>
+              <div class="recommendation-text">${rec.text}</div>
+            </div>
+            <div class="recommendation-priority priority-${rec.priority}">
+              ${rec.priority === 'high' ? 'Alta' : rec.priority === 'medium' ? 'Media' : 'Baja'}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    function generateExpenseTrends(stats, monthlySpent, monthlyOrders) {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const daysPassed = today.getDate();
+      const daysRemaining = daysInMonth - daysPassed;
+      
+      // Proyección mensual
+      const dailyAverage = monthlySpent / daysPassed;
+      const projectedMonthly = dailyAverage * daysInMonth;
+      
+      // Meta de ahorro
+      const userId = localStorage.getItem('currentUserId');
+      const budget = localStorage.getItem(`budget_${userId}`);
+      const budgetAmount = budget ? parseFloat(budget) : 0;
+      
+      let savingsGoal = '';
+      if (budgetAmount > 0) {
+        const potentialSavings = budgetAmount - projectedMonthly;
+        if (potentialSavings > 0) {
+          savingsGoal = `Puedes ahorrar $${potentialSavings.toFixed(2)} este mes`;
+        } else {
+          savingsGoal = `Necesitas ajustar tu presupuesto en $${Math.abs(potentialSavings).toFixed(2)}`;
+        }
+      } else {
+        savingsGoal = 'Establece un presupuesto para calcular tu potencial de ahorro';
+      }
+      
+      // Actualizar elementos
+      document.getElementById('monthlyProjection').textContent = 
+        `Proyección: $${projectedMonthly.toFixed(2)} (promedio diario: $${dailyAverage.toFixed(2)})`;
+      
+      document.getElementById('savingsGoal').textContent = savingsGoal;
+      
+      document.getElementById('daysRemaining').textContent = 
+        `${daysRemaining} días restantes en ${today.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
     }
     
     function setMonthlyBudget() {
