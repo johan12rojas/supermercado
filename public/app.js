@@ -1005,6 +1005,7 @@ async function bootAdmin() {
   }
 }
 
+
 // Función para cargar categorías en el admin
 async function loadCategories() {
   try {

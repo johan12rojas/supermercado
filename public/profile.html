@@ -480,7 +480,20 @@
     
     async function loadCategoryChart(userId) {
       try {
-        // Obtener órdenes del usuario para analizar categorías
+        // Obtener todos los productos con sus categorías
+        const productsResponse = await fetch('/api/products');
+        const products = await productsResponse.json();
+        
+        // Crear mapa de productos por ID
+        const productMap = {};
+        products.forEach(product => {
+          productMap[product.id] = {
+            name: product.name,
+            category: product.category || 'Sin categoría'
+          };
+        });
+        
+        // Obtener órdenes del usuario
         const orders = await fetch(`/api/orders/${userId}`).then(r => r.json());
         const categoryChart = document.getElementById('categoryChart');
         
@@ -489,36 +502,28 @@
           return;
         }
         
-        // Analizar categorías de productos comprados
+        // Analizar categorías usando datos reales de la base de datos
         const categoryStats = {};
         let totalProducts = 0;
         
         orders.forEach(order => {
           if (order.items_summary) {
-            // Parsear items_summary (formato: "Producto x1 ($precio), Producto x2 ($precio)")
+            // Parsear items_summary usando nombres de productos reales
             const items = order.items_summary.split(', ');
             items.forEach(item => {
               const match = item.match(/^(.+?)\s+x(\d+)/);
               if (match) {
-                const productName = match[1].toLowerCase();
+                const productName = match[1].trim();
                 const quantity = parseInt(match[2]);
                 
-                // Categorización mejorada
-                let category = 'Otros';
-                if (productName.includes('manzana') || productName.includes('banana') || productName.includes('naranja') || productName.includes('fresa') || productName.includes('uva') || productName.includes('fruta')) {
-                  category = 'Frutas';
-                } else if (productName.includes('leche') || productName.includes('queso') || productName.includes('yogur') || productName.includes('lácteo')) {
-                  category = 'Lácteos';
-                } else if (productName.includes('pan') || productName.includes('galleta') || productName.includes('torta') || productName.includes('panadería')) {
-                  category = 'Panadería';
-                } else if (productName.includes('huevo')) {
-                  category = 'Huevos';
-                } else if (productName.includes('agua') || productName.includes('jugo') || productName.includes('bebida') || productName.includes('té') || productName.includes('refresco')) {
-                  category = 'Bebidas';
-                } else if (productName.includes('verdura') || productName.includes('vegetal') || productName.includes('lechuga') || productName.includes('tomate')) {
-                  category = 'Verduras';
-                } else if (productName.includes('carne') || productName.includes('pollo') || productName.includes('pescado') || productName.includes('jamón')) {
-                  category = 'Carnes';
+                // Buscar el producto en el mapa para obtener su categoría real
+                let category = 'Sin categoría';
+                for (const [productId, productInfo] of Object.entries(productMap)) {
+                  if (productInfo.name.toLowerCase().includes(productName.toLowerCase()) || 
+                      productName.toLowerCase().includes(productInfo.name.toLowerCase())) {
+                    category = productInfo.category;
+                    break;
+                  }
                 }
                 
                 if (!categoryStats[category]) {
@@ -529,24 +534,12 @@
               }
             });
           } else if (order.items) {
-            // Parsear JSON si está disponible
+            // Parsear JSON usando IDs de productos reales
             try {
               const items = JSON.parse(order.items);
               items.forEach(item => {
-                let category = 'Otros';
-                const productName = item.name.toLowerCase();
-                
-                if (productName.includes('manzana') || productName.includes('banana') || productName.includes('naranja') || productName.includes('fresa') || productName.includes('uva')) {
-                  category = 'Frutas';
-                } else if (productName.includes('leche') || productName.includes('queso') || productName.includes('yogur')) {
-                  category = 'Lácteos';
-                } else if (productName.includes('pan') || productName.includes('galleta') || productName.includes('torta')) {
-                  category = 'Panadería';
-                } else if (productName.includes('huevo')) {
-                  category = 'Huevos';
-                } else if (productName.includes('agua') || productName.includes('jugo') || productName.includes('bebida')) {
-                  category = 'Bebidas';
-                }
+                const productInfo = productMap[item.productId];
+                const category = productInfo ? productInfo.category : 'Sin categoría';
                 
                 if (!categoryStats[category]) {
                   categoryStats[category] = 0;
@@ -565,139 +558,56 @@
           return;
         }
         
-        // Generar gráfico circular con lógica corregida
+        // Generar gráfico de barras horizontales
         const colors = ['#14b8a6', '#ff6b5a', '#22c55e', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
         const categories = Object.keys(categoryStats);
         
-        // Ordenar categorías por cantidad (mayor a menor) para mejor visualización
+        // Ordenar categorías por cantidad (mayor a menor)
         const sortedCategories = categories.sort((a, b) => categoryStats[b] - categoryStats[a]);
         
-        let currentAngle = 0;
-        const radius = 80;
-        const centerX = 110;
-        const centerY = 110;
-        
-        // Crear círculos para cada categoría con cálculo correcto de ángulos
-        const svgCircles = sortedCategories.map((category, index) => {
+        // Crear barras horizontales
+        const bars = sortedCategories.map((category, index) => {
           const count = categoryStats[category];
           const percentage = (count / totalProducts) * 100;
-          const angle = (percentage / 100) * 360;
-          const circumference = 2 * Math.PI * radius;
-          const strokeDasharray = `${(angle / 360) * circumference} ${circumference}`;
+          const barWidth = Math.max(percentage * 2, 5); // Mínimo 5% de ancho para visibilidad
           
-          // Calcular el offset correcto
-          const offset = -currentAngle * circumference / 360;
-          
-          const circle = `<circle 
-            class="progress" 
-            cx="${centerX}" 
-            cy="${centerY}" 
-            r="${radius}" 
-            stroke="${colors[index % colors.length]}" 
-            stroke-dasharray="${strokeDasharray}" 
-            stroke-dashoffset="${offset}"
-            data-category="${category}"
-            data-count="${count}"
-            data-percentage="${percentage.toFixed(1)}"
-          />`;
-          
-          currentAngle += angle;
-          return circle;
+          return `
+            <div class="category-bar" data-category="${category}" data-count="${count}" data-percentage="${percentage.toFixed(1)}">
+              <div class="bar-label">
+                <span class="category-name">${category}</span>
+                <span class="category-count">${count} productos</span>
+              </div>
+              <div class="bar-container">
+                <div class="bar-fill" style="width: ${barWidth}%; background: ${colors[index % colors.length]}"></div>
+                <span class="bar-percentage">${percentage.toFixed(1)}%</span>
+              </div>
+            </div>
+          `;
         }).join('');
         
-        // Crear leyenda con colores correctos
-        const legend = sortedCategories.map((category, index) => `
-          <div class="circular-legend-item">
-            <div class="circular-legend-color" style="background: ${colors[index % colors.length]}"></div>
-            <span>${category} (${categoryStats[category]})</span>
-          </div>
-        `).join('');
-        
         categoryChart.innerHTML = `
-          <div class="circular-chart">
-            <svg width="220" height="220">
-              <circle class="background" cx="${centerX}" cy="${centerY}" r="${radius}" />
-              ${svgCircles}
-            </svg>
-            <div class="chart-center">
-              <div class="chart-center-value">${totalProducts}</div>
-              <div class="chart-center-label">productos</div>
+          <div class="bars-chart">
+            <div class="chart-header">
+              <h4>Distribución por Categorías</h4>
+              <p class="chart-subtitle">Total: ${totalProducts} productos</p>
             </div>
-          </div>
-          <div class="circular-legend">
-            ${legend}
+            <div class="bars-container">
+              ${bars}
+            </div>
           </div>
         `;
         
-        // Agregar interactividad mejorada
-        const chartSvg = categoryChart.querySelector('svg');
-        const circles = chartSvg.querySelectorAll('.progress');
-        
-        circles.forEach(circle => {
-          circle.addEventListener('mouseenter', function() {
-            const category = this.getAttribute('data-category');
-            const count = this.getAttribute('data-count');
-            const percentage = this.getAttribute('data-percentage');
-            
-            // Resaltar el círculo
-            this.style.strokeWidth = '20';
-            this.style.filter = 'drop-shadow(0 0 8px rgba(0,0,0,0.3))';
-            
-            // Mostrar tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'chart-tooltip';
-            tooltip.innerHTML = `
-              <strong>${category}</strong><br>
-              ${count} productos (${percentage}%)
-            `;
-            tooltip.style.position = 'absolute';
-            tooltip.style.background = 'var(--card)';
-            tooltip.style.border = '1px solid var(--line)';
-            tooltip.style.borderRadius = '8px';
-            tooltip.style.padding = '8px 12px';
-            tooltip.style.fontSize = '12px';
-            tooltip.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            tooltip.style.zIndex = '1000';
-            tooltip.style.pointerEvents = 'none';
-            
-            document.body.appendChild(tooltip);
-            
-            // Posicionar tooltip
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
-            tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
-            
-            this.tooltip = tooltip;
-            
-            // Resaltar en la leyenda
-            const legendItems = categoryChart.querySelectorAll('.circular-legend-item');
-            legendItems.forEach(item => {
-              if (item.textContent.includes(category)) {
-                item.style.fontWeight = '700';
-                item.style.transform = 'scale(1.05)';
-                item.style.color = 'var(--text)';
-              }
-            });
+        // Interactividad para las barras
+        const categoryBars = categoryChart.querySelectorAll('.category-bar');
+        categoryBars.forEach(bar => {
+          bar.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(8px)';
+            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
           });
           
-          circle.addEventListener('mouseleave', function() {
-            // Quitar resaltado del círculo
-            this.style.strokeWidth = '16';
-            this.style.filter = 'none';
-            
-            // Remover tooltip
-            if (this.tooltip) {
-              document.body.removeChild(this.tooltip);
-              this.tooltip = null;
-            }
-            
-            // Quitar resaltado de la leyenda
-            const legendItems = categoryChart.querySelectorAll('.circular-legend-item');
-            legendItems.forEach(item => {
-              item.style.fontWeight = '500';
-              item.style.transform = 'scale(1)';
-              item.style.color = 'var(--muted)';
-            });
+          bar.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+            this.style.boxShadow = 'none';
           });
         });
         

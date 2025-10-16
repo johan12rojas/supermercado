@@ -89,11 +89,11 @@
           <div class="form-row">
             <div class="form-group">
               <label for="name">Nombre del Producto</label>
-              <input id="name" required placeholder="Ej: Manzanas Gala">
+              <input id="name" name="name" required placeholder="Ej: Manzanas Gala">
             </div>
             <div class="form-group">
               <label for="category">Categoría</label>
-              <select id="category" required>
+              <select id="category" name="category" required>
                 <option value="">Seleccionar categoría</option>
                 <option value="Frutas">Frutas</option>
                 <option value="Lácteos">Lácteos</option>
@@ -106,28 +106,28 @@
 
           <div class="form-group">
             <label for="description">Descripción</label>
-            <textarea id="description" rows="3" placeholder="Describe las características del producto"></textarea>
+            <textarea id="description" name="description" rows="3" placeholder="Describe las características del producto"></textarea>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="price">Precio ($)</label>
-              <input id="price" type="number" min="0" step="0.01" required placeholder="0.00">
+              <input id="price" name="price" type="number" min="0" step="0.01" required placeholder="0.00">
             </div>
             <div class="form-group">
               <label for="stock">Stock</label>
-              <input id="stock" type="number" min="0" step="1" required placeholder="0">
+              <input id="stock" name="stock" type="number" min="0" step="1" required placeholder="0">
             </div>
           </div>
 
           <div class="form-group">
             <label for="image">URL de Imagen</label>
-            <input id="image" type="url" placeholder="https://ejemplo.com/imagen.jpg">
+            <input id="image" name="image" type="url" placeholder="https://ejemplo.com/imagen.jpg">
           </div>
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input id="isEco" type="checkbox">
+              <input id="isEco" name="isEco" type="checkbox">
               <span class="checkmark"></span>
               Producto Ecológico 🌿
             </label>
