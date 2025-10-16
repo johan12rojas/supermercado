@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administración - Supermercado</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="container header">
+    <h1 class="brand">Administración</h1>
+    <nav>
+      <a href="/">Inicio</a>
+      <button class="btn" id="logoutBtn">Cerrar sesión</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="admin-hero">
+      <h1>Panel de Administración</h1>
+      <p>Gestiona productos, inventario y configuración del supermercado</p>
+    </section>
+
+    <!-- Buscador de productos -->
+    <section class="admin-card">
+      <div class="card-header">
+        <h2>Buscar Productos</h2>
+        <div class="card-icon">🔍</div>
+      </div>
+      <div class="admin-search">
+        <div class="search-row">
+          <input type="text" id="adminSearch" placeholder="Buscar por nombre o descripción...">
+          <select id="adminCategoryFilter">
+            <option value="">Todas las categorías</option>
+            <option value="Frutas">Frutas</option>
+            <option value="Lácteos">Lácteos</option>
+            <option value="Panadería">Panadería</option>
+            <option value="Huevos">Huevos</option>
+            <option value="Bebidas">Bebidas</option>
+          </select>
+          <button class="btn primary" id="adminSearchBtn">Buscar</button>
+          <button class="btn" id="adminClearBtn">Limpiar</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="admin-grid">
+      <section class="admin-card">
+        <div class="card-header">
+          <h2>Crear / Editar Producto</h2>
+          <div class="card-icon">📦</div>
+        </div>
+        <form id="productForm" class="admin-form">
+          <input type="hidden" id="productId">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Nombre del Producto</label>
+              <input id="name" required placeholder="Ej: Manzanas Gala">
+            </div>
+            <div class="form-group">
+              <label for="category">Categoría</label>
+              <select id="category" required>
+                <option value="">Seleccionar categoría</option>
+                <option value="Frutas">Frutas</option>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Panadería">Panadería</option>
+                <option value="Huevos">Huevos</option>
+                <option value="Bebidas">Bebidas</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Descripción</label>
+            <textarea id="description" rows="3" placeholder="Describe las características del producto"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="price">Precio ($)</label>
+              <input id="price" type="number" min="0" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label for="stock">Stock</label>
+              <input id="stock" type="number" min="0" step="1" required placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="image">URL de Imagen</label>
+            <input id="image" type="url" placeholder="https://ejemplo.com/imagen.jpg">
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input id="isEco" type="checkbox">
+              <span class="checkmark"></span>
+              Producto Ecológico 🌿
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn primary" type="submit">
+              <span class="btn-icon">💾</span>
+              Guardar Producto
+            </button>
+            <button class="btn secondary" type="button" id="resetBtn">
+              <span class="btn-icon">🔄</span>
+              Limpiar Formulario
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-card">
+        <div class="card-header">
+          <h2>Inventario de Productos</h2>
+          <div class="card-icon">📋</div>
+        </div>
+        <div class="products-table">
+          <div class="table-header">
+            <span>Producto</span>
+            <span>Precio</span>
+            <span>Stock</span>
+            <span>Categoría</span>
+            <span>Eco</span>
+            <span>Acciones</span>
+          </div>
+          <div id="adminList" class="table-body"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container footer">© 2025 Supermercado Demo</footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supermercado - Inicio</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header-app">
+    <div class="container header-row">
+      <div class="logo">
+        <div class="logo-icon">🛒</div>
+        <div class="logo-text">
+          <div class="title">SuperMercado</div>
+          <div class="subtitle">Delivery Express</div>
+        </div>
+      </div>
+      <div class="search"><input id="search" type="search" placeholder="Buscar productos..."><span class="search-icon">🔎</span></div>
+      <nav class="icons">
+        <a class="icon" id="themeToggle" title="Modo Nocturno">🌙</a>
+        <a class="icon" id="ecoToggle" title="Modo Ecológico">🌱</a>
+        <a class="icon admin-link hidden" href="/admin.html" title="Admin">🛠️</a>
+        <a class="icon" id="cartIcon" title="Carrito">🛍️ <span id="cartCount">0</span></a>
+        <a class="icon" id="accountIcon" title="Cuenta">👤</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-badge">Nuevos Productos</div>
+      <h1 class="hero-title">Productos Frescos<br>Entrega Rápida</h1>
+      <p class="hero-desc">Obtén productos frescos y orgánicos entregados en tu puerta en menos de 2 horas. Calidad garantizada.</p>
+      <div class="row">
+        <button class="btn primary" id="shopNow">Comprar Ahora →</button>
+        <button class="btn" id="learnMore">Saber Más</button>
+      </div>
+    </section>
+
+    <section class="features" id="features"></section>
+
+    <h2 class="section-title">Comprar por Categoría</h2>
+    <section id="categories" class="categories"></section>
+
+    <h2 class="section-title">Todos los Productos</h2>
+    <section id="grid" class="grid"></section>
+
+    <section id="cartPanel" class="cart drawer hidden">
+      <div class="drawer-head">
+        <h2>Carrito de Compras</h2>
+        <button class="btn" id="closeCart">✕</button>
+      </div>
+      <div id="cartItems"></div>
+      <div class="cart-summary">
+        <span>Total:</span>
+        <strong id="cartTotal">$0.00</strong>
+      </div>
+      <button id="checkoutBtn" class="btn primary">Finalizar compra</button>
+    </section>
+  </main>
+
+  <footer class="container footer">© 2025 Supermercado Demo</footer>
+
+  <!-- Modales -->
+  <div id="overlay" class="overlay hidden"></div>
+  <div id="productModal" class="modal hidden">
+    <div class="modal-head">
+      <h3 id="pmTitle">Producto</h3>
+      <button class="btn" id="pmClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <img id="pmImg" alt="" style="width:100%;border-radius:12px;max-height:260px;object-fit:cover">
+      <p id="pmDesc" class="muted" style="margin-top:8px"></p>
+      <div class="row" style="align-items:center;justify-content:space-between;margin-top:8px">
+        <strong id="pmPrice">$0.00</strong>
+        <button class="btn primary" id="pmAdd">Añadir al carrito</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="accountModal" class="modal login-modal hidden">
+    <div class="modal-head">
+      <h3 id="modalTitle">Bienvenido/a – ingresa a tu cuenta</h3>
+      <button class="btn" id="amClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="modalSubtitle" style="color:var(--muted);margin-bottom:24px;font-size:14px;">Inicia sesión o crea una cuenta para continuar con tu compra</p>
+      
+      <!-- Tabs de Login/Registro -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="loginTab">Iniciar Sesión</button>
+        <button class="auth-tab" id="registerTab">Registrarse</button>
+      </div>
+      
+      <!-- Formulario de Login -->
+      <div id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input id="amEmail" type="email" placeholder="tu@ejemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input id="amPass" type="password" placeholder="••••••••">
+        </div>
+        <button class="btn primary" id="amLogin">Iniciar Sesión</button>
+        <div class="forgot-link">
+          <a href="#" onclick="alert('Función de recuperación de contraseña'); return false;">¿Olvidaste tu contraseña?</a>
+        </div>
+      </div>
+      
+      <!-- Formulario de Registro -->
+      <div id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input id="amName" type="text" placeholder="Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input id="amEmailReg" type="email" placeholder="tu@ejemplo.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input id="amPassReg" type="password" placeholder="••••••••">
+        </div>
+        <button class="btn primary" id="amRegister">Crear Cuenta</button>
+      </div>
+      
+      <div class="divider">
+        <span>O CONTINUAR CON</span>
+      </div>
+      
+      <div class="social-buttons">
+        <button class="social-btn" title="Google">G</button>
+        <button class="social-btn" title="Apple">🍎</button>
+        <button class="social-btn" title="Facebook">f</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
+
