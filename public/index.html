@@ -10,7 +10,9 @@
   <header class="header-app">
     <div class="container header-row">
       <div class="logo">
-        <div class="logo-icon">🛒</div>
+        <div class="logo-icon">
+          <img src="/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
+        </div>
         <div class="logo-text">
           <div class="title">SuperMercado</div>
           <div class="subtitle">Delivery Express</div>
@@ -23,6 +25,7 @@
         <a class="icon admin-link hidden" href="/admin.html" title="Admin">🛠️</a>
         <a class="icon" id="cartIcon" title="Carrito">🛍️ <span id="cartCount">0</span></a>
         <a class="icon" id="accountIcon" title="Cuenta">👤</a>
+        <a class="icon profile-link hidden" href="/profile.html" title="Mi Perfil">👤</a>
       </nav>
     </div>
   </header>
@@ -56,7 +59,10 @@
         <span>Total:</span>
         <strong id="cartTotal">$0.00</strong>
       </div>
-      <button id="checkoutBtn" class="btn primary">Finalizar compra</button>
+      <div class="cart-actions">
+        <button id="clearCartBtn" class="btn">Limpiar Carrito</button>
+        <button id="checkoutBtn" class="btn primary">Finalizar compra</button>
+      </div>
     </section>
   </main>
 

@@ -16,7 +16,19 @@ migrate();
 
 // Helpers
 function getProductById(productId) {
-  return db.prepare('SELECT * FROM products WHERE id = ?').get(productId);
+  return db.prepare('SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.id = ?').get(productId);
+}
+
+function getUserById(id) {
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+}
+
+function getUserByEmail(email) {
+  return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+}
+
+function getCategoryById(id) {
+  return db.prepare('SELECT * FROM categories WHERE id = ?').get(id);
 }
 
 // Products API
@@ -133,6 +145,161 @@ app.post('/api/orders', (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// Users API
+app.post('/api/auth/register', (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+  }
+  
+  try {
+    const existingUser = getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ error: 'El email ya está registrado' });
+    }
+    
+    const insert = db.prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+    const info = insert.run(name, email, password);
+    const user = getUserById(info.lastInsertRowid);
+    delete user.password; // No enviar contraseña
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email y contraseña son obligatorios' });
+  }
+  
+  const user = getUserByEmail(email);
+  if (!user || user.password !== password) {
+    return res.status(401).json({ error: 'Credenciales incorrectas' });
+  }
+  
+  delete user.password; // No enviar contraseña
+  res.json(user);
+});
+
+// Categories API
+app.get('/api/categories', (req, res) => {
+  const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
+  res.json(categories);
+});
+
+app.post('/api/categories', (req, res) => {
+  const { name, description } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'El nombre de la categoría es obligatorio' });
+  }
+  
+  try {
+    const insert = db.prepare('INSERT INTO categories (name, description) VALUES (?, ?)');
+    const info = insert.run(name, description || '');
+    res.status(201).json(getCategoryById(info.lastInsertRowid));
+  } catch (err) {
+    if (err.message.includes('UNIQUE constraint failed')) {
+      res.status(400).json({ error: 'La categoría ya existe' });
+    } else {
+      res.status(400).json({ error: err.message });
+    }
+  }
+});
+
+app.put('/api/categories/:id', (req, res) => {
+  const { name, description } = req.body;
+  const existing = getCategoryById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ error: 'Categoría no encontrada' });
+  }
+  
+  try {
+    const update = db.prepare('UPDATE categories SET name = ?, description = ? WHERE id = ?');
+    update.run(name ?? existing.name, description ?? existing.description, req.params.id);
+    res.json(getCategoryById(req.params.id));
+  } catch (err) {
+    if (err.message.includes('UNIQUE constraint failed')) {
+      res.status(400).json({ error: 'El nombre de la categoría ya existe' });
+    } else {
+      res.status(400).json({ error: err.message });
+    }
+  }
+});
+
+app.delete('/api/categories/:id', (req, res) => {
+  const existing = getCategoryById(req.params.id);
+  if (!existing) {
+    return res.status(404).json({ error: 'Categoría no encontrada' });
+  }
+  
+  try {
+    const deleteCategory = db.prepare('DELETE FROM categories WHERE id = ?');
+    deleteCategory.run(req.params.id);
+    res.json({ message: 'Categoría eliminada' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Orders API
+app.get('/api/orders/:userId', (req, res) => {
+  const { userId } = req.params;
+  const orders = db.prepare(`
+    SELECT o.*, 
+           GROUP_CONCAT(
+             p.name || ' x' || oi.quantity || ' ($' || oi.price || ')', 
+             ', '
+           ) as items_summary
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.id
+    WHERE o.user_id = ?
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+  `).all(userId);
+  
+  res.json(orders);
+});
+
+app.get('/api/orders/:userId/stats', (req, res) => {
+  const { userId } = req.params;
+  
+  const stats = db.prepare(`
+    SELECT 
+      COUNT(*) as total_orders,
+      COALESCE(SUM(total), 0) as total_spent,
+      COALESCE(AVG(total), 0) as avg_order_value,
+      MAX(created_at) as last_order_date
+    FROM orders 
+    WHERE user_id = ?
+  `).get(userId);
+  
+  const monthlyStats = db.prepare(`
+    SELECT 
+      strftime('%Y-%m', created_at) as month,
+      COUNT(*) as orders_count,
+      SUM(total) as total_spent
+    FROM orders 
+    WHERE user_id = ? 
+    GROUP BY strftime('%Y-%m', created_at)
+    ORDER BY month DESC
+    LIMIT 6
+  `).all(userId);
+  
+  res.json({ ...stats, monthlyStats });
+});
+
+app.get('/api/users/:id', (req, res) => {
+  const user = getUserById(req.params.id);
+  if (!user) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
+  }
+  delete user.password; // No enviar contraseña
+  res.json(user);
 });
 
 app.listen(PORT, () => {

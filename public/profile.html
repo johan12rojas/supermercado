@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi Perfil - SuperMercado</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header-app">
+    <div class="container">
+      <div class="header-row">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
+          </div>
+          <div class="logo-text">
+            <div class="title">SuperMercado</div>
+            <div class="subtitle">Delivery Express</div>
+          </div>
+        </div>
+        <div class="search-placeholder"></div>
+        <nav class="icons">
+          <a class="icon" href="/" title="Inicio">🏠</a>
+          <a class="icon" id="themeToggle" title="Modo Nocturno">🌙</a>
+          <a class="icon" id="ecoToggle" title="Modo Ecológico">🌱</a>
+          <a class="icon admin-link hidden" href="/admin.html" title="Admin">🛠️</a>
+          <a class="icon" id="cartIcon" title="Carrito">🛍️ <span id="cartCount">0</span></a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="profile-hero">
+      <div class="profile-avatar">
+        <div class="avatar-circle">👤</div>
+      </div>
+      <div class="profile-info">
+        <h1 id="userName">Usuario</h1>
+        <p id="userEmail">usuario@ejemplo.com</p>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="totalOrders">0</span>
+            <span class="stat-label">Pedidos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalSpent">$0</span>
+            <span class="stat-label">Gastado</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="avgOrder">$0</span>
+            <span class="stat-label">Promedio</span>
+          </div>
+        </div>
+        
+        <div class="profile-actions">
+          <button class="logout-btn" id="profileLogoutBtn">
+            <span class="logout-icon">🚪</span>
+            <span class="logout-text">Cerrar Sesión</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="profile-tabs">
+      <button class="profile-tab active" id="historyTab">📋 Historial</button>
+      <button class="profile-tab" id="statsTab">📊 Estadísticas</button>
+      <button class="profile-tab" id="expensesTab">💰 Gastos</button>
+    </div>
+
+    <!-- Historial de Compras -->
+    <section id="historySection" class="profile-section">
+      <div class="section-header">
+        <h2>Historial de Compras</h2>
+        <div class="section-icon">📋</div>
+      </div>
+      <div id="ordersList" class="orders-list">
+        <!-- Las órdenes se cargarán aquí -->
+      </div>
+    </section>
+
+    <!-- Estadísticas -->
+    <section id="statsSection" class="profile-section hidden">
+      <div class="section-header">
+        <h2>Estadísticas de Compras</h2>
+        <div class="section-icon">📊</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-content">
+            <h3>Último Pedido</h3>
+            <p id="lastOrderDate">Nunca</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <h3>Tendencia Mensual</h3>
+            <div id="monthlyChart" class="chart-container">
+              <!-- Gráfico se generará aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gestor de Gastos -->
+    <section id="expensesSection" class="profile-section hidden">
+      <div class="section-header">
+        <h2>Gestor de Gastos</h2>
+        <div class="section-icon">💰</div>
+      </div>
+      <div class="expenses-grid">
+        <div class="expense-card">
+          <h3>Presupuesto Mensual</h3>
+          <div class="budget-controls">
+            <input type="number" id="monthlyBudget" placeholder="Presupuesto mensual" min="0" step="0.01">
+            <button class="btn primary" id="setBudget">Establecer</button>
+          </div>
+          <div class="budget-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="budgetProgress"></div>
+            </div>
+            <p id="budgetText">Presupuesto no establecido</p>
+          </div>
+        </div>
+        <div class="expense-card">
+          <h3>Análisis de Gastos</h3>
+          <div class="expense-analysis">
+            <div class="analysis-item">
+              <span>Gasto promedio por pedido:</span>
+              <span id="avgExpense">$0</span>
+            </div>
+            <div class="analysis-item">
+              <span>Pedidos este mes:</span>
+              <span id="monthlyOrders">0</span>
+            </div>
+            <div class="analysis-item">
+              <span>Gasto total este mes:</span>
+              <span id="monthlyExpense">$0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    // Script específico para la página de perfil
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cargar datos del usuario
+      loadUserProfile();
+      
+      // Inicializar modo oscuro y eco
+      initializeThemes();
+      
+      // Inicializar carrito
+      initializeCart();
+      
+      // Event listeners para tabs
+      document.getElementById('historyTab').addEventListener('click', () => showSection('history'));
+      document.getElementById('statsTab').addEventListener('click', () => showSection('stats'));
+      document.getElementById('expensesTab').addEventListener('click', () => showSection('expenses'));
+      
+      // Event listeners para gestor de gastos
+      document.getElementById('setBudget').addEventListener('click', setMonthlyBudget);
+      
+      // Event listener para logout
+      document.getElementById('profileLogoutBtn').addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+          // Limpiar datos de autenticación
+          localStorage.removeItem('super_auth_v1');
+          localStorage.removeItem('currentUserId');
+          alert('Sesión cerrada correctamente');
+          // Redirigir a la página principal
+          window.location.href = '/';
+        }
+      });
+      
+      // Cargar presupuesto guardado
+      loadBudget();
+    });
+    
+    // Función para inicializar temas
+    function initializeThemes() {
+      // Aplicar tema guardado
+      const savedTheme = localStorage.getItem('super_theme_v1') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      const savedEco = localStorage.getItem('super_eco_v1') === 'true';
+      document.documentElement.setAttribute('data-eco', savedEco);
+      
+      // Event listeners para toggles
+      document.getElementById('themeToggle')?.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('super_theme_v1', newTheme);
+      });
+      
+      document.getElementById('ecoToggle')?.addEventListener('click', () => {
+        const currentEco = document.documentElement.getAttribute('data-eco') === 'true';
+        const newEco = !currentEco;
+        document.documentElement.setAttribute('data-eco', newEco);
+        localStorage.setItem('super_eco_v1', newEco);
+      });
+    }
+    
+    // Función para inicializar carrito
+    function initializeCart() {
+      // Cargar contador del carrito
+      updateCartBadge();
+      
+      // Event listener para el icono del carrito
+      document.getElementById('cartIcon')?.addEventListener('click', () => {
+        // Redirigir a la página principal con el carrito abierto
+        window.location.href = '/?openCart=true';
+      });
+    }
+    
+    // Función para actualizar el badge del carrito
+    function updateCartBadge() {
+      const badge = document.getElementById('cartCount');
+      if (badge) {
+        try {
+          const cartData = localStorage.getItem('super_cart_v1');
+          if (cartData) {
+            const items = JSON.parse(cartData);
+            const count = items.reduce((total, item) => total + (item.quantity || 0), 0);
+            badge.textContent = count;
+          } else {
+            badge.textContent = '0';
+          }
+        } catch (error) {
+          console.error('Error cargando carrito:', error);
+          badge.textContent = '0';
+        }
+      }
+    }
+    
+    function showSection(section) {
+      // Ocultar todas las secciones
+      document.querySelectorAll('.profile-section').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+      
+      // Mostrar sección seleccionada
+      document.getElementById(section + 'Section').classList.remove('hidden');
+      document.getElementById(section + 'Tab').classList.add('active');
+      
+      // Cargar datos específicos de la sección
+      if (section === 'stats') {
+        loadStats();
+      } else if (section === 'expenses') {
+        loadExpenses();
+      }
+    }
+    
+    async function loadUserProfile() {
+      const userId = localStorage.getItem('currentUserId');
+      if (!userId) {
+        window.location.href = '/';
+        return;
+      }
+      
+      try {
+        const user = await fetch(`/api/users/${userId}`).then(r => r.json());
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userEmail').textContent = user.email;
+        
+        // Cargar estadísticas básicas
+        const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
+        document.getElementById('totalOrders').textContent = stats.total_orders || 0;
+        document.getElementById('totalSpent').textContent = '$' + (stats.total_spent || 0).toFixed(2);
+        document.getElementById('avgOrder').textContent = '$' + (stats.avg_order_value || 0).toFixed(2);
+        document.getElementById('lastOrderDate').textContent = stats.last_order_date ? 
+          new Date(stats.last_order_date).toLocaleDateString() : 'Nunca';
+        
+        // Cargar historial
+        loadOrderHistory(userId);
+      } catch (error) {
+        console.error('Error cargando perfil:', error);
+      }
+    }
+    
+    async function loadOrderHistory(userId) {
+      try {
+        const orders = await fetch(`/api/orders/${userId}`).then(r => r.json());
+        const ordersList = document.getElementById('ordersList');
+        
+        if (!orders || orders.length === 0) {
+          ordersList.innerHTML = '<div class="empty-state">No tienes pedidos aún</div>';
+          return;
+        }
+        
+        ordersList.innerHTML = orders.map(order => {
+          const orderDate = new Date(order.created_at);
+          const formattedDate = orderDate.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          return `
+            <div class="order-item">
+              <div class="order-header">
+                <span class="order-id">Pedido #${order.id}</span>
+                <span class="order-date">${formattedDate}</span>
+                <span class="order-total">$${order.total.toFixed(2)}</span>
+              </div>
+              <div class="order-items">
+                <div class="order-status">Estado: Completado</div>
+                <div class="order-summary">${order.items_count || 0} productos</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error cargando historial:', error);
+        const ordersList = document.getElementById('ordersList');
+        ordersList.innerHTML = '<div class="empty-state">Error cargando el historial de pedidos</div>';
+      }
+    }
+    
+    async function loadStats() {
+      const userId = localStorage.getItem('currentUserId');
+      if (!userId) return;
+      
+      try {
+        const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
+        
+        // Actualizar estadísticas en la sección de stats
+        document.getElementById('lastOrderDate').textContent = stats.last_order_date ? 
+          new Date(stats.last_order_date).toLocaleDateString('es-ES') : 'Nunca';
+        
+        document.getElementById('totalOrdersCount').textContent = stats.total_orders || 0;
+        document.getElementById('totalSpentAmount').textContent = '$' + (stats.total_spent || 0).toFixed(2);
+        document.getElementById('avgOrderValue').textContent = '$' + (stats.avg_order_value || 0).toFixed(2);
+        
+        // Generar gráfico simple de gastos mensuales
+        const chartContainer = document.getElementById('monthlyChart');
+        if (chartContainer) {
+          if (stats.monthlyStats && stats.monthlyStats.length > 0) {
+            const maxSpent = Math.max(...stats.monthlyStats.map(m => m.total_spent));
+            chartContainer.innerHTML = stats.monthlyStats.map(month => {
+              const height = maxSpent > 0 ? (month.total_spent / maxSpent) * 100 : 0;
+              return `
+                <div class="chart-bar">
+                  <div class="bar" style="height: ${height}%"></div>
+                  <span class="bar-label">${month.month}</span>
+                  <span class="bar-value">$${month.total_spent.toFixed(2)}</span>
+                </div>
+              `;
+            }).join('');
+          } else {
+            chartContainer.innerHTML = '<div class="empty-state">No hay datos suficientes para mostrar el gráfico</div>';
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+        const chartContainer = document.getElementById('monthlyChart');
+        if (chartContainer) {
+          chartContainer.innerHTML = '<div class="empty-state">Error cargando estadísticas</div>';
+        }
+      }
+    }
+    
+    function loadExpenses() {
+      const userId = localStorage.getItem('currentUserId');
+      if (!userId) return;
+      
+      // Cargar datos de gastos del localStorage
+      const budget = localStorage.getItem(`budget_${userId}`);
+      if (budget) {
+        document.getElementById('monthlyBudget').value = budget;
+        updateBudgetDisplay();
+      }
+      
+      // Cargar estadísticas de gastos desde la API
+      loadExpenseStats(userId);
+    }
+    
+    async function loadExpenseStats(userId) {
+      try {
+        const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
+        
+        // Actualizar estadísticas de gastos
+        const monthlySpent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
+          stats.monthlyStats[0].total_spent : 0;
+        
+        document.getElementById('monthlySpent').textContent = '$' + monthlySpent.toFixed(2);
+        document.getElementById('monthlyOrders').textContent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
+          stats.monthlyStats[0].orders_count : 0;
+        
+        // Actualizar presupuesto si existe
+        const budget = localStorage.getItem(`budget_${userId}`);
+        if (budget) {
+          const budgetAmount = parseFloat(budget);
+          const remaining = budgetAmount - monthlySpent;
+          document.getElementById('budgetRemaining').textContent = '$' + remaining.toFixed(2);
+          
+          // Cambiar color según el presupuesto
+          const remainingElement = document.getElementById('budgetRemaining');
+          if (remaining < 0) {
+            remainingElement.style.color = '#ef4444'; // Rojo si se excedió
+          } else if (remaining < budgetAmount * 0.2) {
+            remainingElement.style.color = '#f59e0b'; // Amarillo si queda poco
+          } else {
+            remainingElement.style.color = '#22c55e'; // Verde si está bien
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando estadísticas de gastos:', error);
+      }
+    }
+    
+    function setMonthlyBudget() {
+      const budget = document.getElementById('monthlyBudget').value;
+      const userId = localStorage.getItem('currentUserId');
+      
+      if (!budget || budget <= 0) {
+        alert('Por favor ingresa un presupuesto válido');
+        return;
+      }
+      
+      localStorage.setItem(`budget_${userId}`, budget);
+      updateBudgetDisplay();
+      alert('Presupuesto establecido correctamente');
+    }
+    
+    function loadBudget() {
+      const userId = localStorage.getItem('currentUserId');
+      const budget = localStorage.getItem(`budget_${userId}`);
+      if (budget) {
+        document.getElementById('monthlyBudget').value = budget;
+        updateBudgetDisplay();
+      }
+    }
+    
+    async function updateBudgetDisplay() {
+      const userId = localStorage.getItem('currentUserId');
+      const budget = localStorage.getItem(`budget_${userId}`);
+      
+      if (!budget) return;
+      
+      try {
+        const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
+        const monthlySpent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
+          stats.monthlyStats[0].total_spent : 0;
+        
+        const percentage = (monthlySpent / budget) * 100;
+        const progressFill = document.getElementById('budgetProgress');
+        const budgetText = document.getElementById('budgetText');
+        
+        progressFill.style.width = Math.min(percentage, 100) + '%';
+        progressFill.style.backgroundColor = percentage > 80 ? '#ef4444' : percentage > 60 ? '#f59e0b' : '#10b981';
+        
+        budgetText.textContent = `$${monthlySpent.toFixed(2)} de $${budget} (${percentage.toFixed(1)}%)`;
+        
+        // Actualizar análisis
+        document.getElementById('avgExpense').textContent = '$' + (stats.avg_order_value || 0).toFixed(2);
+        document.getElementById('monthlyOrders').textContent = stats.monthlyStats && stats.monthlyStats.length > 0 ? 
+          stats.monthlyStats[0].orders_count : 0;
+        document.getElementById('monthlyExpense').textContent = '$' + monthlySpent.toFixed(2);
+      } catch (error) {
+        console.error('Error actualizando presupuesto:', error);
+      }
+    }
+  </script>
+</body>
+</html>

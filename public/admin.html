@@ -45,6 +45,39 @@
     </section>
 
     <div class="admin-grid">
+      <!-- Gestión de Categorías -->
+      <section class="admin-card">
+        <div class="card-header">
+          <h2>Gestionar Categorías</h2>
+          <div class="card-icon">🏷️</div>
+        </div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label for="categoryName">Nombre de la Categoría</label>
+            <input id="categoryName" type="text" placeholder="Ej: Verduras">
+          </div>
+          <div class="form-group">
+            <label for="categoryDescription">Descripción</label>
+            <input id="categoryDescription" type="text" placeholder="Descripción opcional">
+          </div>
+          <div class="form-row">
+            <button class="btn primary" id="addCategory">Añadir Categoría</button>
+            <button class="btn" id="resetCategory">Limpiar</button>
+          </div>
+        </div>
+        <div class="categories-list">
+          <div class="table-header">
+            <span>Categoría</span>
+            <span>Descripción</span>
+            <span>Acciones</span>
+          </div>
+          <div id="categoriesList" class="table-body">
+            <!-- Las categorías se cargarán aquí -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Crear/Editar Producto -->
       <section class="admin-card">
         <div class="card-header">
           <h2>Crear / Editar Producto</h2>
@@ -120,6 +153,7 @@
         </div>
         <div class="products-table">
           <div class="table-header">
+            <span>Imagen</span>
             <span>Producto</span>
             <span>Precio</span>
             <span>Stock</span>
