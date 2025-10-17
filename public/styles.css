@@ -225,7 +225,7 @@ body{
   padding:14px 20px 14px 48px;
   border-radius:999px;
   border:2px solid var(--line);
-  background:#fff;
+  background:rgba(20, 184, 166, 0.08);
   font-size:16px;
   transition:var(--transition);
   box-shadow:var(--shadow);
@@ -234,8 +234,21 @@ body{
 .search input:focus{
   outline:none;
   border-color:var(--primary);
-  box-shadow:0 0 0 3px rgb(16 185 129 / 0.1);
+  box-shadow:0 0 0 3px rgba(20, 184, 166, 0.15);
   transform:translateY(-1px);
+  background:rgba(20, 184, 166, 0.12);
+}
+
+/* Modo ecológico - fondo verde suave */
+[data-eco="true"] .search input{
+  background:rgba(34, 197, 94, 0.08);
+  border-color:rgba(34, 197, 94, 0.2);
+}
+
+[data-eco="true"] .search input:focus{
+  background:rgba(34, 197, 94, 0.12);
+  border-color:rgba(34, 197, 94, 0.4);
+  box-shadow:0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .search-icon{
@@ -392,18 +405,18 @@ body{
   z-index:2;
 }
 
-.hero-badge{
-  display:inline-block;
-  background:#fff;
-  border:2px solid var(--primary);
-  color:var(--primary-dark);
-  padding:8px 16px;
-  border-radius:999px;
-  margin-bottom:16px;
-  font-weight:700;
-  font-size:14px;
-  box-shadow:var(--shadow);
-  animation:slideInDown 0.6s ease-out;
+.hero-badge {
+  display: inline-block;
+  background: #FF6B5A;
+  border: 2px solid #FF6B5A;
+  color: #ffffff;
+  padding: 2px 16px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  /* box-shadow: var(--shadow); */
+  animation: slideInDown 0.6s ease-out;
 }
 
 .hero-title{
@@ -552,22 +565,58 @@ body{
 /* Categorías mejoradas */
 .categories{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:16px;
+  grid-template-columns:repeat(7,1fr);
+  gap:24px;
   margin-bottom:48px;
+  max-width:1400px;
+  margin-left:auto;
+  margin-right:auto;
+  padding:0 20px;
+}
+
+@media (max-width:1400px){
+  .categories{
+    max-width:1200px;
+    gap:20px;
+  }
+}
+
+@media (max-width:1200px){
+  .categories{
+    grid-template-columns:repeat(5,1fr);
+    gap:16px;
+    max-width:100%;
+  }
+}
+
+@media (max-width:768px){
+  .categories{
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+}
+
+@media (max-width:480px){
+  .categories{
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+  }
 }
 
 .cat{
   background:#fff;
   border:2px solid var(--line);
   border-radius:var(--radius-lg);
-  padding:20px;
+  padding:24px 16px;
   display:flex;
-  gap:16px;
+  flex-direction:column;
+  gap:12px;
   align-items:center;
   cursor:pointer;
   transition:var(--transition);
   box-shadow:var(--shadow);
+  min-height:120px;
+  justify-content:center;
 }
 
 .cat:hover{
@@ -585,12 +634,15 @@ body{
 }
 
 .cat .emoji{
-  font-size:28px;
+  font-size:32px;
+  margin-bottom:8px;
 }
 
 .cat div:last-child{
   font-weight:600;
-  font-size:16px;
+  font-size:14px;
+  text-align:center;
+  line-height:1.2;
 }
 
 /* Grid de productos mejorado */
@@ -909,7 +961,7 @@ input,select,textarea{
   padding:14px 16px;
   border-radius:var(--radius);
   border:2px solid var(--line);
-  background:#fff;
+  background:var(--bg);
   color:var(--text);
   font-size:16px;
   transition:var(--transition);
@@ -1199,13 +1251,27 @@ input:focus,select:focus,textarea:focus{
 }
 
 [data-theme="dark"] .search input{
-  background:#1e293b;
-  border-color:#334155;
+  background:rgba(20, 184, 166, 0.12);
+  border-color:rgba(20, 184, 166, 0.3);
   color:#f1f5f9;
 }
 
 [data-theme="dark"] .search input:focus{
+  background:rgba(20, 184, 166, 0.18);
   border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(20, 184, 166, 0.25);
+}
+
+/* Modo nocturno + ecológico */
+[data-theme="dark"][data-eco="true"] .search input{
+  background:rgba(34, 197, 94, 0.12);
+  border-color:rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"][data-eco="true"] .search input:focus{
+  background:rgba(34, 197, 94, 0.18);
+  border-color:rgba(34, 197, 94, 0.5);
+  box-shadow:0 0 0 3px rgba(34, 197, 94, 0.25);
 }
 
 [data-theme="dark"] .icon:hover{
@@ -1253,13 +1319,50 @@ input:focus,select:focus,textarea:focus{
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea{
-  background:#1e293b;
-  border-color:#334155;
-  color:#f1f5f9;
+  background:var(--bg) !important;
+  border-color:var(--line) !important;
+  color:var(--text) !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus{
+  background:var(--bg) !important;
+  border-color:var(--primary) !important;
+  color:var(--text) !important;
+  box-shadow:0 0 0 3px rgba(20, 184, 166, 0.2) !important;
 }
 
 [data-theme="dark"] .admin-hero{
   background:linear-gradient(135deg,var(--primary),var(--primary-2));
+}
+
+/* Formularios del admin en modo oscuro */
+[data-theme="dark"] .admin-form input,
+[data-theme="dark"] .admin-form select,
+[data-theme="dark"] .admin-form textarea,
+[data-theme="dark"] .search-row input,
+[data-theme="dark"] .search-row select,
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea{
+  background:var(--bg-secondary) !important;
+  border-color:var(--line) !important;
+  color:var(--text) !important;
+}
+
+[data-theme="dark"] .admin-form input:focus,
+[data-theme="dark"] .admin-form select:focus,
+[data-theme="dark"] .admin-form textarea:focus,
+[data-theme="dark"] .search-row input:focus,
+[data-theme="dark"] .search-row select:focus,
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus,
+[data-theme="dark"] .form-group textarea:focus{
+  background:var(--bg-secondary) !important;
+  border-color:var(--primary) !important;
+  color:var(--text) !important;
+  box-shadow:0 0 0 3px rgba(20, 184, 166, 0.25) !important;
 }
 
 [data-theme="dark"] .admin-card{
@@ -1307,9 +1410,9 @@ input:focus,select:focus,textarea:focus{
   background:transparent;
 }
 
+/* Hero-badge mantiene su color original en modo eco */
 [data-eco="true"] .hero-badge{
-  border-color:#22c55e;
-  color:#16a34a;
+  /* Sin cambios - mantiene el color original */
 }
 
 /* Badge ecológico */
@@ -1592,7 +1695,84 @@ input:focus,select:focus,textarea:focus{
 .hidden{display:none !important;}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
 .muted{color:var(--muted);opacity:0.8;}
-.footer{opacity:0.7;font-size:14px;text-align:center;padding:32px 0;}
+.footer{
+  background:var(--bg-secondary);
+  border-top:1px solid var(--line);
+  padding:48px 0;
+  margin-top:64px;
+}
+
+.footer-content{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:32px;
+  flex-wrap:wrap;
+}
+
+.footer-brand{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.footer-logo{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.footer-logo-img{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+}
+
+.footer-title{
+  font-size:20px;
+  font-weight:600;
+  color:var(--primary);
+}
+
+.footer-tagline{
+  font-size:14px;
+  color:var(--muted);
+  margin:0;
+  font-weight:500;
+}
+
+.footer-info{
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.footer-copyright{
+  font-size:14px;
+  color:var(--muted);
+  margin:0;
+  font-weight:500;
+}
+
+.footer-mission{
+  font-size:12px;
+  color:var(--muted);
+  margin:0;
+  opacity:0.8;
+}
+
+@media (max-width:768px){
+  .footer-content{
+    flex-direction:column;
+    text-align:center;
+    gap:24px;
+  }
+  
+  .footer-info{
+    text-align:center;
+  }
+}
 
 /* Animaciones */
 @keyframes slideInDown{
@@ -1685,7 +1865,9 @@ input:focus,select:focus,textarea:focus{
   align-items:center;
   gap:12px;
   padding:16px 24px;
-  background:linear-gradient(135deg,#ef4444,#dc2626);
+  background:linear-gradient(135deg,#FF6B5A
+  ,#ff5643
+);
   color:white;
   border:none;
   border-radius:var(--radius-lg);
@@ -2490,6 +2672,366 @@ input:focus,select:focus,textarea:focus{
   
   .hero-title{
     font-size:28px;
+  }
+}
+
+/* Estadísticas de Administrador */
+.admin-tab {
+  background: #FF6B5A !important;
+  color: white !important;
+  border: 2px solid #FF6B5A !important;
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+.admin-tab:hover,
+.admin-tab.active,
+.admin-tab:hover.active {
+  background: #FF6B5A !important;
+  color: white !important;
+  border: 2px solid #FF6B5A !important;
+  opacity: 1 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.admin-stat-card {
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  box-shadow: var(--shadow);
+  transition: none !important;
+}
+
+.admin-stat-card:hover {
+  background: var(--bg) !important;
+  border: 2px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  transform: none !important;
+}
+
+.admin-stat-card .stat-icon {
+  font-size: 32px;
+  background: var(--primary);
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-stat-card .stat-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.admin-stat-card .stat-content p {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 4px 0;
+}
+
+.admin-stat-card .stat-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.admin-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.admin-chart-card {
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: none !important;
+}
+
+.admin-chart-card:hover {
+  background: var(--bg) !important;
+  border: 2px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  transform: none !important;
+}
+
+.top-products-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.top-products-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.top-products-header h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.products-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  transition: none !important;
+}
+
+.product-rank-item:hover {
+  background: var(--bg-secondary) !important;
+  transform: none !important;
+}
+
+.rank-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-name {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.product-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.product-sales {
+  background: var(--primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.product-revenue {
+  background: var(--secondary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.product-category {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--bg-secondary);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Icono de Modo Ecológico Activo */
+#ecoToggle.eco-active {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.2) !important;
+  animation: ecoIconPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes ecoIconPulse {
+  0% {
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.2);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+    transform: scale(1.03);
+  }
+}
+
+/* Indicador de Modo Ecológico */
+.eco-mode-indicator {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  animation: ecoGlow 2s ease-in-out infinite alternate;
+}
+
+.eco-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  justify-content: center;
+}
+
+.eco-icon {
+  font-size: 24px;
+  animation: ecoPulse 1.5s ease-in-out infinite;
+}
+
+.eco-text {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.eco-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+@keyframes ecoGlow {
+  0% {
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+  100% {
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+  }
+}
+
+@keyframes ecoPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Carrito Vacío */
+.empty-cart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  min-height: 300px;
+}
+
+.empty-cart-icon {
+  color: var(--primary);
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.empty-cart-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 12px 0;
+}
+
+.empty-cart-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+.empty-cart-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.empty-cart-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Responsive para estadísticas de admin */
+@media (max-width:768px){
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .product-rank-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .product-stats {
+    justify-content: center;
+  }
+  
+  .eco-indicator-content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .eco-text, .eco-subtitle {
+    font-size: 14px;
+  }
+  
+  .empty-cart-container {
+    padding: 32px 16px;
+    min-height: 250px;
+  }
+  
+  .empty-cart-title {
+    font-size: 18px;
+  }
+  
+  .empty-cart-subtitle {
+    font-size: 13px;
   }
 }
 

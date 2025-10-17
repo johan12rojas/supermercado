@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mi Perfil - SuperMercado</title>
+  <title>Mi Perfil - EcoMarket</title>
+  <link rel="icon" type="image/png" href="/img/carritologo.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -15,7 +16,7 @@
             <img src="/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
           </div>
           <div class="logo-text">
-            <div class="title">SuperMercado</div>
+            <div class="title">EcoMarket</div>
             <div class="subtitle">Delivery Express</div>
           </div>
         </div>
@@ -67,6 +68,7 @@
       <button class="profile-tab active" id="historyTab">📋 Historial</button>
       <button class="profile-tab" id="statsTab">📊 Estadísticas</button>
       <button class="profile-tab" id="expensesTab">💰 Gastos</button>
+      <button class="profile-tab admin-tab hidden" id="adminStatsTab">🛠️ Admin Stats</button>
     </div>
 
     <!-- Historial de Compras -->
@@ -210,7 +212,86 @@
         </div>
       </div>
     </section>
+
+    <!-- Estadísticas de Administrador -->
+    <section id="adminStatsSection" class="profile-section hidden">
+      <div class="section-header">
+        <h2>Estadísticas de Administrador</h2>
+        <div class="section-icon">🛠️</div>
+      </div>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <h3>Total de Ventas</h3>
+            <p id="adminTotalSales">$0.00</p>
+            <span class="stat-subtitle">Ingresos totales de la tienda</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <h3>Total de Pedidos</h3>
+            <p id="adminTotalOrders">0</p>
+            <span class="stat-subtitle">Pedidos completados</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-content">
+            <h3>Clientes Activos</h3>
+            <p id="adminActiveCustomers">0</p>
+            <span class="stat-subtitle">Usuarios con pedidos</span>
+          </div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <h3>Promedio por Pedido</h3>
+            <p id="adminAvgOrder">$0.00</p>
+            <span class="stat-subtitle">Valor promedio</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-charts-grid">
+        <div class="admin-chart-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <h3>Ventas por Mes</h3>
+            <div id="adminSalesChart" class="chart-container">
+              <!-- Gráfico de ventas se generará aquí -->
+            </div>
+          </div>
+        </div>
+        <div class="admin-chart-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-content">
+            <h3>Top Productos</h3>
+            <div id="adminTopProducts" class="top-products-list">
+              <!-- Lista de productos más vendidos -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="container footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/img/carritologo.png" alt="EcoMarket Logo" class="footer-logo-img">
+          <span class="footer-title">EcoMarket</span>
+        </div>
+        <p class="footer-tagline">🍃 Tu supermercado ecológico de confianza 🌱</p>
+      </div>
+      <div class="footer-info">
+        <p class="footer-copyright">© 2025 EcoMarket · Delivery Express</p>
+        <p class="footer-mission">Comprometidos con el medio ambiente y tu bienestar</p>
+      </div>
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
   <script>
@@ -229,6 +310,7 @@
       document.getElementById('historyTab').addEventListener('click', () => showSection('history'));
       document.getElementById('statsTab').addEventListener('click', () => showSection('stats'));
       document.getElementById('expensesTab').addEventListener('click', () => showSection('expenses'));
+      document.getElementById('adminStatsTab').addEventListener('click', () => showSection('adminStats'));
       
       // Event listeners para gestor de gastos
       document.getElementById('setBudget').addEventListener('click', setMonthlyBudget);
@@ -271,7 +353,25 @@
         const newEco = !currentEco;
         document.documentElement.setAttribute('data-eco', newEco);
         localStorage.setItem('super_eco_v1', newEco);
+        updateEcoIconState();
       });
+      
+      // Inicializar estado del icono eco
+      updateEcoIconState();
+    }
+    
+    // Función para actualizar el estado visual del icono eco
+    function updateEcoIconState() {
+      const ecoIcon = document.getElementById('ecoToggle');
+      if (!ecoIcon) return;
+      
+      const isEcoMode = localStorage.getItem('super_eco_v1') === 'true';
+      
+      if (isEcoMode) {
+        ecoIcon.classList.add('eco-active');
+      } else {
+        ecoIcon.classList.remove('eco-active');
+      }
     }
     
     // Función para inicializar carrito
@@ -320,6 +420,8 @@
         loadStats();
       } else if (section === 'expenses') {
         loadExpenses();
+      } else if (section === 'adminStats') {
+        loadAdminStats();
       }
     }
     
@@ -334,6 +436,19 @@
         const user = await fetch(`/api/users/${userId}`).then(r => r.json());
         document.getElementById('userName').textContent = user.name;
         document.getElementById('userEmail').textContent = user.email;
+        
+        // Cambiar avatar según el tipo de usuario
+        const avatarCircle = document.querySelector('.avatar-circle');
+        if (avatarCircle) {
+          if (user.isAdmin === 1 || user.email === 'admin@supermercado.com') {
+            // Usuario administrador - mostrar admin.png
+            document.getElementById('adminStatsTab').classList.remove('hidden');
+            avatarCircle.innerHTML = '<img src="/img/admin.png" alt="Admin Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+          } else {
+            // Usuario normal - mostrar usern.png
+            avatarCircle.innerHTML = '<img src="/img/usern.png" alt="User Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+          }
+        }
         
         // Cargar estadísticas básicas
         const stats = await fetch(`/api/orders/${userId}/stats`).then(r => r.json());
@@ -967,6 +1082,100 @@
       } catch (error) {
         console.error('Error actualizando presupuesto:', error);
       }
+    }
+    
+    async function loadAdminStats() {
+      try {
+        // Obtener estadísticas generales de la tienda
+        const response = await fetch('/api/admin/stats');
+        const adminStats = await response.json();
+        
+        // Actualizar tarjetas de estadísticas
+        document.getElementById('adminTotalSales').textContent = '$' + (adminStats.totalSales || 0).toFixed(2);
+        document.getElementById('adminTotalOrders').textContent = adminStats.totalOrders || 0;
+        document.getElementById('adminActiveCustomers').textContent = adminStats.activeCustomers || 0;
+        document.getElementById('adminAvgOrder').textContent = '$' + (adminStats.avgOrderValue || 0).toFixed(2);
+        
+        // Generar gráfico de ventas mensuales
+        generateAdminSalesChart(adminStats.monthlySales || []);
+        
+        // Generar lista de productos más vendidos
+        generateTopProducts(adminStats.topProducts || []);
+        
+      } catch (error) {
+        console.error('Error cargando estadísticas de administrador:', error);
+        document.getElementById('adminSalesChart').innerHTML = '<div class="empty-state">Error cargando estadísticas</div>';
+        document.getElementById('adminTopProducts').innerHTML = '<div class="empty-state">Error cargando productos</div>';
+      }
+    }
+    
+    function generateAdminSalesChart(monthlySales) {
+      const chartContainer = document.getElementById('adminSalesChart');
+      
+      if (!monthlySales || monthlySales.length === 0) {
+        chartContainer.innerHTML = '<div class="empty-state">No hay datos de ventas disponibles</div>';
+        return;
+      }
+      
+      const maxSales = Math.max(...monthlySales.map(m => m.totalSales));
+      
+      chartContainer.innerHTML = `
+        <div class="chart-header">
+          <h4>Evolución de Ventas Mensuales</h4>
+          <div class="chart-subtitle">Ingresos de la tienda</div>
+        </div>
+        <div class="chart-bars">
+          ${monthlySales.map((month, index) => {
+            const height = maxSales > 0 ? (month.totalSales / maxSales) * 100 : 0;
+            const monthName = new Date(month.month + '-01').toLocaleDateString('es-ES', { month: 'short' });
+            const year = month.month.split('-')[0];
+            const isCurrentMonth = index === 0;
+            
+            return `
+              <div class="chart-bar">
+                <div class="bar-container">
+                  <div class="bar" style="height: ${height}%" title="$${month.totalSales.toFixed(2)} en ${monthName} ${year}"></div>
+                  <div class="bar-value-overlay">$${month.totalSales.toFixed(2)}</div>
+                </div>
+                <span class="bar-label">${monthName}</span>
+                <span class="bar-year">${year}</span>
+                ${isCurrentMonth ? '<span class="current-month">Actual</span>' : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+    
+    function generateTopProducts(topProducts) {
+      const container = document.getElementById('adminTopProducts');
+      
+      if (!topProducts || topProducts.length === 0) {
+        container.innerHTML = '<div class="empty-state">No hay datos de productos disponibles</div>';
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="top-products-header">
+          <h4>Productos Más Vendidos</h4>
+          <p class="chart-subtitle">Ranking de popularidad</p>
+        </div>
+        <div class="products-ranking">
+          ${topProducts.map((product, index) => `
+            <div class="product-rank-item">
+              <div class="rank-number">#${index + 1}</div>
+              <div class="product-info">
+                <div class="product-name">${product.name}</div>
+                <div class="product-stats">
+                  <span class="product-sales">${product.totalSold} vendidos</span>
+                  <span class="product-revenue">$${product.totalRevenue.toFixed(2)}</span>
+                </div>
+              </div>
+              <div class="product-category">${product.category || 'Sin categoría'}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
     }
   </script>
 </body>

@@ -3,16 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Administración - Supermercado</title>
+  <title>Panel de Administración - EcoMarket</title>
+  <link rel="icon" type="image/png" href="/img/carritologo.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="container header">
-    <h1 class="brand">Administración</h1>
-    <nav>
-      <a href="/">Inicio</a>
-      <button class="btn" id="logoutBtn">Cerrar sesión</button>
-    </nav>
+  <header class="header-app">
+    <div class="container">
+      <div class="header-row">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
+          </div>
+          <div class="logo-text">
+            <div class="title">EcoMarket</div>
+            <div class="subtitle">Delivery Express</div>
+          </div>
+        </div>
+        <div class="search">
+          <div class="search-icon">🔍</div>
+          <input type="text" id="search" placeholder="Buscar productos..." autocomplete="off">
+        </div>
+        <nav class="icons">
+          <a class="icon" href="/" title="Inicio">🏠</a>
+          <a class="icon" id="themeToggle" title="Modo Nocturno">🌙</a>
+          <a class="icon" id="ecoToggle" title="Modo Ecológico">🌱</a>
+          <a class="icon" href="/profile.html" title="Perfil">👤</a>
+          <button class="btn" id="logoutBtn">Cerrar sesión</button>
+        </nav>
+      </div>
+    </div>
   </header>
 
   <main class="container">
@@ -32,11 +52,19 @@
           <input type="text" id="adminSearch" placeholder="Buscar por nombre o descripción...">
           <select id="adminCategoryFilter">
             <option value="">Todas las categorías</option>
-            <option value="Frutas">Frutas</option>
-            <option value="Lácteos">Lácteos</option>
-            <option value="Panadería">Panadería</option>
-            <option value="Huevos">Huevos</option>
-            <option value="Bebidas">Bebidas</option>
+            <option value="Frutas">🍎 Frutas</option>
+            <option value="Lácteos">🥛 Lácteos</option>
+            <option value="Panadería">🍞 Panadería</option>
+            <option value="Huevos">🥚 Huevos</option>
+            <option value="Bebidas">🥤 Bebidas</option>
+            <option value="Aseo">🧴 Aseo</option>
+            <option value="Limpieza">🧽 Limpieza</option>
+            <option value="Juegos">🎮 Juegos</option>
+            <option value="Carnes">🥩 Carnes</option>
+            <option value="Granos">🌾 Granos</option>
+            <option value="Pastas">🍝 Pastas</option>
+            <option value="Verduras">🥬 Verduras</option>
+            <option value="Medicamentos">💊 Medicamentos</option>
           </select>
           <button class="btn primary" id="adminSearchBtn">Buscar</button>
           <button class="btn" id="adminClearBtn">Limpiar</button>
@@ -95,11 +123,19 @@
               <label for="category">Categoría</label>
               <select id="category" name="category" required>
                 <option value="">Seleccionar categoría</option>
-                <option value="Frutas">Frutas</option>
-                <option value="Lácteos">Lácteos</option>
-                <option value="Panadería">Panadería</option>
-                <option value="Huevos">Huevos</option>
-                <option value="Bebidas">Bebidas</option>
+                <option value="Frutas">🍎 Frutas</option>
+                <option value="Lácteos">🥛 Lácteos</option>
+                <option value="Panadería">🍞 Panadería</option>
+                <option value="Huevos">🥚 Huevos</option>
+                <option value="Bebidas">🥤 Bebidas</option>
+                <option value="Aseo">🧴 Aseo</option>
+                <option value="Limpieza">🧽 Limpieza</option>
+                <option value="Juegos">🎮 Juegos</option>
+                <option value="Carnes">🥩 Carnes</option>
+                <option value="Granos">🌾 Granos</option>
+                <option value="Pastas">🍝 Pastas</option>
+                <option value="Verduras">🥬 Verduras</option>
+                <option value="Medicamentos">💊 Medicamentos</option>
               </select>
             </div>
           </div>
@@ -167,9 +203,89 @@
     </div>
   </main>
 
-  <footer class="container footer">© 2025 Supermercado Demo</footer>
+  <footer class="container footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img src="/img/carritologo.png" alt="EcoMarket Logo" class="footer-logo-img">
+          <span class="footer-title">EcoMarket</span>
+        </div>
+        <p class="footer-tagline">🍃 Tu supermercado ecológico de confianza 🌱</p>
+      </div>
+      <div class="footer-info">
+        <p class="footer-copyright">© 2025 EcoMarket · Delivery Express</p>
+        <p class="footer-mission">Comprometidos con el medio ambiente y tu bienestar</p>
+      </div>
+    </div>
+  </footer>
 
   <script src="/app.js"></script>
+  <script>
+    // Script específico para la página de administración
+    document.addEventListener('DOMContentLoaded', function() {
+      // Inicializar temas
+      initializeAdminThemes();
+      
+      // Inicializar funcionalidades del admin
+      initializeAdminFeatures();
+    });
+    
+    // Función para inicializar temas en el admin
+    function initializeAdminThemes() {
+      // Aplicar tema guardado
+      const savedTheme = localStorage.getItem('super_theme_v1') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      const savedEco = localStorage.getItem('super_eco_v1') === 'true';
+      document.documentElement.setAttribute('data-eco', savedEco);
+      
+      // Event listeners para toggles
+      document.getElementById('themeToggle')?.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('super_theme_v1', newTheme);
+      });
+      
+      document.getElementById('ecoToggle')?.addEventListener('click', () => {
+        const currentEco = document.documentElement.getAttribute('data-eco') === 'true';
+        const newEco = !currentEco;
+        document.documentElement.setAttribute('data-eco', newEco);
+        localStorage.setItem('super_eco_v1', newEco);
+        updateEcoIconState();
+      });
+      
+      // Inicializar estado del icono eco
+      updateEcoIconState();
+    }
+    
+    // Función para actualizar el estado visual del icono eco
+    function updateEcoIconState() {
+      const ecoIcon = document.getElementById('ecoToggle');
+      if (!ecoIcon) return;
+      
+      const isEcoMode = localStorage.getItem('super_eco_v1') === 'true';
+      
+      if (isEcoMode) {
+        ecoIcon.classList.add('eco-active');
+      } else {
+        ecoIcon.classList.remove('eco-active');
+      }
+    }
+    
+    // Función para inicializar funcionalidades específicas del admin
+    function initializeAdminFeatures() {
+      // Event listener para logout
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+          localStorage.removeItem('super_auth_v1');
+          localStorage.removeItem('currentUserId');
+          alert('Sesión cerrada correctamente');
+          window.location.href = '/';
+        }
+      });
+    }
+  </script>
 </body>
 </html>
 

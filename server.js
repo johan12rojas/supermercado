@@ -112,7 +112,7 @@ app.post('/api/orders', (req, res) => {
 
   const getForUpdate = db.prepare('SELECT * FROM products WHERE id = ?');
   const updateStock = db.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
-  const insertOrder = db.prepare('INSERT INTO orders (total, user_id) VALUES (?, ?)');
+  const insertOrder = db.prepare('INSERT INTO orders (total, user_id, status) VALUES (?, ?, ?)');
   const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
 
   try {
@@ -127,7 +127,7 @@ app.post('/api/orders', (req, res) => {
         if (p.stock < qty) throw new Error(`Stock insuficiente para ${p.name}`);
         total += p.price * qty;
       }
-      const orderInfo = insertOrder.run(total, userId);
+      const orderInfo = insertOrder.run(total, userId, 'completed');
       const orderId = orderInfo.lastInsertRowid;
       for (const it of items) {
         const p = getForUpdate.get(it.productId);
@@ -300,6 +300,66 @@ app.get('/api/users/:id', (req, res) => {
   }
   delete user.password; // No enviar contraseña
   res.json(user);
+});
+
+// Admin Stats API
+app.get('/api/admin/stats', (req, res) => {
+  try {
+    // Estadísticas generales (incluyendo compras del admin)
+    const totalStats = db.prepare(`
+      SELECT 
+        COUNT(*) as totalOrders,
+        COALESCE(SUM(total), 0) as totalSales,
+        COALESCE(AVG(total), 0) as avgOrderValue,
+        COUNT(DISTINCT user_id) as activeCustomers
+      FROM orders 
+      WHERE status = 'completed'
+    `).get();
+    
+    // Ventas mensuales (últimos 6 meses, incluyendo compras del admin)
+    const monthlySales = db.prepare(`
+      SELECT 
+        strftime('%Y-%m', created_at) as month,
+        COUNT(*) as ordersCount,
+        COALESCE(SUM(total), 0) as totalSales
+      FROM orders 
+      WHERE status = 'completed'
+        AND created_at >= date('now', '-6 months')
+      GROUP BY strftime('%Y-%m', created_at)
+      ORDER BY month DESC
+    `).all();
+    
+    // Productos más vendidos (datos reales)
+    const topProducts = db.prepare(`
+      SELECT 
+        p.id,
+        p.name,
+        p.category,
+        p.price,
+        COALESCE(SUM(oi.quantity), 0) as totalSold,
+        COALESCE(SUM(oi.quantity * oi.price), 0) as totalRevenue
+      FROM products p
+      LEFT JOIN order_items oi ON p.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'completed'
+      GROUP BY p.id, p.name, p.category, p.price
+      HAVING totalSold > 0
+      ORDER BY totalSold DESC
+      LIMIT 10
+    `).all();
+    
+    res.json({
+      totalOrders: totalStats.totalOrders || 0,
+      totalSales: totalStats.totalSales || 0,
+      avgOrderValue: totalStats.avgOrderValue || 0,
+      activeCustomers: totalStats.activeCustomers || 0,
+      monthlySales: monthlySales || [],
+      topProducts: topProducts || []
+    });
+    
+  } catch (error) {
+    console.error('Error obteniendo estadísticas de admin:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 app.listen(PORT, () => {

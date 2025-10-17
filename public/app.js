@@ -1,5 +1,5 @@
-// SuperMercado App - Versión Funcional
-console.log('SuperMercado App iniciando...');
+// EcoMarket App - Versión Funcional
+console.log('EcoMarket App iniciando...');
 
 // UI Helper
 const ui = {
@@ -22,11 +22,28 @@ const ui = {
       return;
     }
     
-    console.log('Renderizando', list.length, 'productos');
-    
     const isEcoMode = localStorage.getItem('super_eco_v1') === 'true';
     
-    grid.innerHTML = list.map(p => `
+    // Filtrar productos si el modo ecológico está activado
+    const filteredList = isEcoMode ? list.filter(p => p.isEco == 1) : list;
+    
+    console.log('Renderizando', filteredList.length, 'productos', isEcoMode ? '(modo eco activo)' : '');
+    
+    if (filteredList.length === 0 && isEcoMode) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">🌱</div>
+          <h3>Modo Ecológico Activo</h3>
+          <p>No hay productos ecológicos disponibles en este momento.</p>
+          <button class="btn" onclick="toggleEcoMode()" style="margin-top: 16px;">
+            Ver todos los productos
+          </button>
+        </div>
+      `;
+      return;
+    }
+    
+    grid.innerHTML = filteredList.map(p => `
       <article class="card product">
         ${p.isEco == 1 ? '<div class="eco-badge">🌿 Eco</div>' : ''}
         <img src="${p.image || ''}" alt="${p.name}" loading="lazy">
@@ -73,7 +90,20 @@ const ui = {
     const items = cart.get();
     
     if (items.length === 0) {
-      cartItems.innerHTML = '<div class="empty-cart">Carrito vacío</div>';
+      cartItems.innerHTML = `
+        <div class="empty-cart-container">
+          <div class="empty-cart-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          <h3 class="empty-cart-title">Tu carrito está vacío</h3>
+          <p class="empty-cart-subtitle">¡Agrega algunos productos para comenzar!</p>
+          <button class="empty-cart-btn" onclick="ui.closeCart()">Continuar Comprando</button>
+        </div>
+      `;
       if (cartTotal) cartTotal.textContent = this.money(0);
       return;
     }
@@ -98,14 +128,27 @@ const ui = {
     
     // Event listeners para controles del carrito
     cartItems.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const addId = e.target.dataset.add;
       const removeId = e.target.dataset.remove;
       const deleteId = e.target.dataset.delete;
       
+      console.log('Cart button clicked:', { addId, removeId, deleteId });
+      
       if (addId) {
         const item = items.find(i => i.productId == addId);
         if (item) {
-          cart.add(item, 1);
+          console.log('Adding item:', item.name);
+          // Crear un objeto producto compatible con cart.add()
+          const product = {
+            id: item.productId,
+            name: item.name,
+            price: item.price,
+            image: item.image
+          };
+          cart.add(product, 1);
           this.renderCart();
           this.updateCartBadge();
         }
@@ -113,8 +156,16 @@ const ui = {
       
       if (removeId) {
         const item = items.find(i => i.productId == removeId);
-        if (item && item.quantity > 1) {
-          cart.add(item, -1); // Restar uno
+        if (item) {
+          console.log('Removing item:', item.name);
+          // Crear un objeto producto compatible con cart.add()
+          const product = {
+            id: item.productId,
+            name: item.name,
+            price: item.price,
+            image: item.image
+          };
+          cart.add(product, -1); // Restar uno
           this.renderCart();
           this.updateCartBadge();
         }
@@ -612,7 +663,7 @@ function openAccountModal() {
       loginTab?.classList.remove('active');
       registerTab.classList.add('active');
       if (modalTitle) modalTitle.textContent = 'Crear nueva cuenta';
-      if (modalSubtitle) modalSubtitle.textContent = 'Únete a SuperMercado y disfruta de productos frescos';
+      if (modalSubtitle) modalSubtitle.textContent = 'Únete a EcoMarket y disfruta de productos frescos';
     };
   }
   
@@ -719,6 +770,9 @@ async function bootIndex() {
     const savedEco = localStorage.getItem(ecoMode.key) === 'true';
     ecoMode.apply(savedEco);
     
+    // Actualizar estado visual del icono eco
+    updateEcoIconState();
+    
   // Load features
   const features = ui.qs('#features');
   if (features) {
@@ -765,7 +819,15 @@ async function bootIndex() {
         {emoji:'🥛',name:'Lácteos',value:'Lácteos'},
         {emoji:'🍞',name:'Panadería',value:'Panadería'},
         {emoji:'🥚',name:'Huevos',value:'Huevos'},
-        {emoji:'🥤',name:'Bebidas',value:'Bebidas'}
+        {emoji:'🥤',name:'Bebidas',value:'Bebidas'},
+        {emoji:'🧴',name:'Aseo',value:'Aseo'},
+        {emoji:'🧽',name:'Limpieza',value:'Limpieza'},
+        {emoji:'🎮',name:'Juegos',value:'Juegos'},
+        {emoji:'🥩',name:'Carnes',value:'Carnes'},
+        {emoji:'🌾',name:'Granos',value:'Granos'},
+        {emoji:'🍝',name:'Pastas',value:'Pastas'},
+        {emoji:'🥬',name:'Verduras',value:'Verduras'},
+        {emoji:'💊',name:'Medicamentos',value:'Medicamentos'}
       ];
       
       categories.innerHTML = options.map((o, i) => `
@@ -774,6 +836,9 @@ async function bootIndex() {
           <div>${o.name}</div>
         </button>
       `).join('');
+      
+      // Agregar indicador de modo ecológico
+      updateEcoModeIndicator();
       
       console.log('Categorías cargadas');
       
@@ -826,8 +891,62 @@ async function bootIndex() {
     
     ui.qs('#ecoToggle')?.addEventListener('click', () => {
       ecoMode.toggle();
+      updateEcoModeIndicator();
+      updateEcoIconState();
       loadProducts(); // Reload to show eco badges
     });
+    
+    // Función global para toggle del modo ecológico
+    window.toggleEcoMode = () => {
+      ecoMode.toggle();
+      updateEcoModeIndicator();
+      updateEcoIconState();
+      loadProducts();
+    };
+    
+    // Función para actualizar el indicador de modo ecológico
+    function updateEcoModeIndicator() {
+      const categories = ui.qs('#categories');
+      if (!categories) return;
+      
+      const isEcoMode = localStorage.getItem('super_eco_v1') === 'true';
+      
+      // Buscar indicador existente en el contenedor padre
+      const existingIndicator = categories.parentNode.querySelector('.eco-mode-indicator');
+      
+      if (isEcoMode && !existingIndicator) {
+        // Solo crear indicador si está activo y no existe
+        const indicator = document.createElement('div');
+        indicator.className = 'eco-mode-indicator';
+        indicator.innerHTML = `
+          <div class="eco-indicator-content">
+            <span class="eco-icon">🌱</span>
+            <span class="eco-text">Modo Ecológico Activo</span>
+            <span class="eco-subtitle">Solo productos eco</span>
+          </div>
+        `;
+        
+        // Insertar antes de las categorías
+        categories.parentNode.insertBefore(indicator, categories);
+      } else if (!isEcoMode && existingIndicator) {
+        // Remover indicador si se desactiva el modo eco
+        existingIndicator.remove();
+      }
+    }
+    
+    // Función para actualizar el estado visual del icono eco
+    function updateEcoIconState() {
+      const ecoIcon = ui.qs('#ecoToggle');
+      if (!ecoIcon) return;
+      
+      const isEcoMode = localStorage.getItem('super_eco_v1') === 'true';
+      
+      if (isEcoMode) {
+        ecoIcon.classList.add('eco-active');
+      } else {
+        ecoIcon.classList.remove('eco-active');
+      }
+    }
     
     ui.qs('#accountIcon')?.addEventListener('click', openAccountModal);
     
@@ -1158,4 +1277,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-console.log('SuperMercado App cargado');
+console.log('EcoMarket App cargado');
