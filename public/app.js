@@ -15,6 +15,26 @@ const ui = {
     }
   },
   
+  // Update checkout button state based on authentication
+  updateCheckoutButton() {
+    const checkoutBtn = this.qs('#checkoutBtn');
+    const currentUser = auth.getCurrentUser();
+    
+    if (checkoutBtn) {
+      if (currentUser) {
+        // Usuario autenticado - botón normal
+        checkoutBtn.textContent = 'Finalizar compra';
+        checkoutBtn.className = 'btn primary';
+        checkoutBtn.title = 'Completar tu pedido';
+      } else {
+        // Usuario no autenticado - botón con indicador
+        checkoutBtn.textContent = '🔐 Iniciar sesión para comprar';
+        checkoutBtn.className = 'btn primary auth-required';
+        checkoutBtn.title = 'Necesitas iniciar sesión para realizar una compra';
+      }
+    }
+  },
+  
   renderProducts(list) {
     const grid = this.qs('#grid');
     if (!grid) {
@@ -564,6 +584,15 @@ const auth = {
     this.currentUser = null;
     localStorage.removeItem(this.key);
     localStorage.removeItem('currentUserId');
+    
+    // Limpiar carrito al cerrar sesión para evitar problemas
+    if (typeof cart !== 'undefined') {
+      cart.clear();
+      if (typeof ui !== 'undefined') {
+        ui.renderCart();
+        ui.updateCartBadge();
+      }
+    }
   },
   
   isLoggedIn() {
@@ -692,9 +721,41 @@ function openAccountModal() {
   // Event listeners
   ui.qs('#amClose')?.addEventListener('click', closeModal);
   
-  // Modal Saber Más
+  // Botón Comprar Ahora - Scroll a productos
+  ui.qs('#shopNow')?.addEventListener('click', () => {
+    // Scroll suave a la sección de productos
+    const grid = ui.qs('#grid');
+    if (grid) {
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Opcional: mostrar un mensaje de bienvenida
+      setTimeout(() => {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: var(--primary);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-weight: 600;
+          z-index: 1000;
+          animation: slideInRight 0.3s ease;
+        `;
+        notification.textContent = '🛒 ¡Explora nuestros productos!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideOutRight 0.3s ease';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }, 500);
+    }
+  });
+
+  // Modal Saber Más - Información detallada
   ui.qs('#learnMore')?.addEventListener('click', () => {
-    alert('🌱 EcoMarket - Tu supermercado ecológico de confianza!\n\n🍃 Productos 100% ecológicos\n🚚 Delivery en menos de 2 horas\n💚 Comprometidos con el medio ambiente\n⭐ Calidad garantizada\n\n¡Gracias por elegir EcoMarket!');
+    alert('🌱 EcoMarket - Tu supermercado ecológico de confianza!\n\n🍃 Productos 100% ecológicos\n🚚 Delivery en menos de 2 horas\n💚 Comprometidos con el medio ambiente\n⭐ Calidad garantizada\n\n🏷️ ¡Nueva sección de DESCUENTOS disponible!\n💚 Modo ecológico para productos sostenibles\n\n¡Gracias por elegir EcoMarket!');
   });
   
   ui.qs('#amLogin')?.addEventListener('click', async () => {
@@ -764,6 +825,9 @@ function updateUserUI() {
     if (profileLink) profileLink.classList.add('hidden');
     if (adminLink) adminLink.classList.add('hidden');
   }
+  
+  // Actualizar estado del botón de checkout
+  ui.updateCheckoutButton();
 }
 
 // Debounce helper
@@ -790,6 +854,9 @@ async function bootIndex() {
     // Initialize auth
     auth.isLoggedIn();
     updateUserUI();
+    
+    // Update checkout button state
+    ui.updateCheckoutButton();
     
     // Apply saved themes
     const savedTheme = localStorage.getItem(theme.key) || 'light';
@@ -995,6 +1062,31 @@ async function bootIndex() {
         return;
       }
       
+      // Verificar si el usuario está autenticado
+      const currentUser = auth.getCurrentUser();
+      if (!currentUser) {
+        // Usuario no autenticado - mostrar mensaje y abrir modal de login
+        alert('🔐 Para realizar una compra, primero debes iniciar sesión.\n\nSe abrirá el formulario de login y se limpiará tu carrito temporal.');
+        
+        // Limpiar carrito para evitar problemas
+        cart.clear();
+        ui.renderCart();
+        ui.updateCartBadge();
+        
+        // Abrir modal de login
+        openAccountModal();
+        
+        // Enfocar en el tab de login
+        setTimeout(() => {
+          const loginTab = ui.qs('#loginTab');
+          if (loginTab) {
+            loginTab.click();
+          }
+        }, 100);
+        
+        return;
+      }
+      
       try {
         const payload = items.map(i => ({ 
           productId: i.productId, 
@@ -1002,10 +1094,7 @@ async function bootIndex() {
           price: i.price  // Enviar el precio con descuento del carrito
         }));
         
-        // Obtener userId del usuario logueado si existe
-        const currentUser = auth.getCurrentUser();
-        const userId = currentUser ? currentUser.id : null;
-        
+        const userId = currentUser.id;
         const order = await api.createOrder(payload, userId);
         alert('Pedido creado #' + order.id + ' por ' + ui.money(order.total));
         cart.clear();
