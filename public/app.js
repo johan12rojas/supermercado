@@ -43,20 +43,29 @@ const ui = {
       return;
     }
     
-    grid.innerHTML = filteredList.map(p => `
-      <article class="card product">
-        ${p.isEco == 1 ? '<div class="eco-badge">🌿 Eco</div>' : ''}
-        <img src="${p.image || ''}" alt="${p.name}" loading="lazy">
-        <h3>${p.name}</h3>
-        <div class="muted">${p.category || ''}</div>
-        <div class="row" style="align-items:center;justify-content:space-between">
-          <span class="price">${this.money(p.price)}</span>
-          <button class="btn" data-add="${p.id}" ${p.stock <= 0 ? 'disabled' : ''}>
-            ${p.stock <= 0 ? 'Sin Stock' : 'Añadir'}
-          </button>
-        </div>
-      </article>
-    `).join('');
+    grid.innerHTML = filteredList.map(p => {
+      const hasDiscount = p.discount_percentage && p.discount_percentage > 0;
+      const discountedPrice = hasDiscount ? p.price * (1 - p.discount_percentage / 100) : p.price;
+      
+      return `
+        <article class="card product">
+          ${p.isEco == 1 ? '<div class="eco-badge">🌿 Eco</div>' : ''}
+          ${hasDiscount ? `<div class="discount-badge">-${p.discount_percentage}%</div>` : ''}
+          <img src="${p.image || ''}" alt="${p.name}" loading="lazy">
+          <h3>${p.name}</h3>
+          <div class="muted">${p.category || ''}</div>
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div class="price-container">
+              ${hasDiscount ? `<span class="original-price">${this.money(p.price)}</span>` : ''}
+              <span class="price ${hasDiscount ? 'discounted' : ''}">${this.money(discountedPrice)}</span>
+            </div>
+            <button class="btn" data-add="${p.id}" ${p.stock <= 0 ? 'disabled' : ''}>
+              ${p.stock <= 0 ? 'Sin Stock' : 'Añadir'}
+            </button>
+          </div>
+        </article>
+      `;
+    }).join('');
     
     // Event listener para botones de añadir (solo si no existe)
     if (!grid.hasAttribute('data-listener-added')) {
@@ -108,23 +117,30 @@ const ui = {
       return;
     }
     
-    cartItems.innerHTML = items.map(item => `
-      <div class="cart-item">
-        <div class="item-image">
-          <img src="${item.image || ''}" alt="${item.name}" loading="lazy">
+    cartItems.innerHTML = items.map(item => {
+      const hasDiscount = item.discount && item.discount > 0;
+      return `
+        <div class="cart-item">
+          <div class="item-image">
+            <img src="${item.image || ''}" alt="${item.name}" loading="lazy">
+          </div>
+          <div class="item-info">
+            <h4>${item.name}</h4>
+            <div class="item-price">
+              ${hasDiscount ? `<span class="original-price">${this.money(item.originalPrice)}</span>` : ''}
+              <span class="current-price ${hasDiscount ? 'discounted' : ''}">${this.money(item.price)}</span>
+              ${hasDiscount ? `<span class="discount-info">-${item.discount}%</span>` : ''}
+            </div>
+          </div>
+          <div class="item-controls">
+            <button class="btn" data-remove="${item.productId}" title="Quitar uno">-</button>
+            <span>${item.quantity}</span>
+            <button class="btn" data-add="${item.productId}" title="Añadir uno">+</button>
+            <button class="btn" data-delete="${item.productId}" title="Eliminar del carrito" style="margin-left: 8px; background: #ef4444; color: white;">🗑️</button>
+          </div>
         </div>
-        <div class="item-info">
-          <h4>${item.name}</h4>
-          <p>${this.money(item.price)}</p>
-        </div>
-        <div class="item-controls">
-          <button class="btn" data-remove="${item.productId}" title="Quitar uno">-</button>
-          <span>${item.quantity}</span>
-          <button class="btn" data-add="${item.productId}" title="Añadir uno">+</button>
-          <button class="btn" data-delete="${item.productId}" title="Eliminar del carrito" style="margin-left: 8px; background: #ef4444; color: white;">🗑️</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
     
     // Event listeners para controles del carrito
     cartItems.onclick = (e) => {
@@ -235,6 +251,10 @@ const cart = {
     const items = this.get();
     const existing = items.find(i => i.productId === product.id);
     
+    // Calcular precio con descuento
+    const hasDiscount = product.discount_percentage && product.discount_percentage > 0;
+    const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
+    
     if (existing) {
       existing.quantity += quantity;
       // Si la cantidad llega a 0 o menos, eliminar el item
@@ -249,7 +269,9 @@ const cart = {
         items.push({
           productId: product.id,
           name: product.name,
-          price: product.price,
+          price: finalPrice,
+          originalPrice: product.price,
+          discount: product.discount_percentage || 0,
           image: product.image,
           quantity
         });
@@ -670,6 +692,11 @@ function openAccountModal() {
   // Event listeners
   ui.qs('#amClose')?.addEventListener('click', closeModal);
   
+  // Modal Saber Más
+  ui.qs('#learnMore')?.addEventListener('click', () => {
+    alert('🌱 EcoMarket - Tu supermercado ecológico de confianza!\n\n🍃 Productos 100% ecológicos\n🚚 Delivery en menos de 2 horas\n💚 Comprometidos con el medio ambiente\n⭐ Calidad garantizada\n\n¡Gracias por elegir EcoMarket!');
+  });
+  
   ui.qs('#amLogin')?.addEventListener('click', async () => {
     const email = ui.qs('#amEmail')?.value;
     const password = ui.qs('#amPass')?.value;
@@ -718,6 +745,7 @@ function closeModal() {
   ui.qs('#overlay')?.classList.add('hidden');
   ui.qs('#productModal')?.classList.add('hidden');
   ui.qs('#accountModal')?.classList.add('hidden');
+  document.body.style.overflow = '';
 }
 
 function updateUserUI() {
@@ -815,6 +843,7 @@ async function bootIndex() {
     if (categories) {
       const options = [
         {emoji:'🧺',name:'Todas',value:''},
+        {emoji:'🏷️',name:'Descuentos',value:'descuentos'},
         {emoji:'🍎',name:'Frutas',value:'Frutas'},
         {emoji:'🥛',name:'Lácteos',value:'Lácteos'},
         {emoji:'🍞',name:'Panadería',value:'Panadería'},
@@ -859,7 +888,16 @@ async function bootIndex() {
     async function loadProducts(category = '') {
       try {
         console.log('Cargando productos para categoría:', category);
-        const products = await api.listProducts({ category });
+        let products;
+        
+        if (category === 'descuentos') {
+          // Cargar todos los productos y filtrar solo los que tienen descuento
+          const allProducts = await api.listProducts({});
+          products = allProducts.filter(p => p.discount_percentage && p.discount_percentage > 0);
+        } else {
+          products = await api.listProducts({ category });
+        }
+        
         ui.renderProducts(products);
         console.log('Productos renderizados:', products.length);
       } catch (error) {
@@ -958,7 +996,11 @@ async function bootIndex() {
       }
       
       try {
-        const payload = items.map(i => ({ productId: i.productId, quantity: i.quantity }));
+        const payload = items.map(i => ({ 
+          productId: i.productId, 
+          quantity: i.quantity,
+          price: i.price  // Enviar el precio con descuento del carrito
+        }));
         
         // Obtener userId del usuario logueado si existe
         const currentUser = auth.getCurrentUser();
@@ -1082,7 +1124,8 @@ async function bootAdmin() {
           stock: parseInt(formData.get('stock')),
           category: formData.get('category'),
           image: formData.get('image'),
-          isEco: formData.get('isEco') === 'on'
+          isEco: formData.get('isEco') === 'on',
+          discount: parseFloat(formData.get('discount')) || 0
         };
         
         const productId = ui.qs('#productId')?.value;
@@ -1169,7 +1212,16 @@ async function loadCategories() {
 // Función para cargar productos en el admin
 async function loadAdminProducts(query = '', category = '') {
   try {
-    const products = await api.listProducts({ q: query, category });
+    let products;
+    
+    if (category === 'descuentos') {
+      // Cargar todos los productos y filtrar solo los que tienen descuento
+      const allProducts = await api.listProducts({ q: query });
+      products = allProducts.filter(p => p.discount_percentage && p.discount_percentage > 0);
+    } else {
+      products = await api.listProducts({ q: query, category });
+    }
+    
     const adminList = ui.qs('#adminList');
     
     if (adminList) {
@@ -1183,6 +1235,7 @@ async function loadAdminProducts(query = '', category = '') {
           <span>${product.stock}</span>
           <span>${product.category || '-'}</span>
           <span>${product.isEco ? '🌿 Sí' : '❌ No'}</span>
+          <span>${product.discount_percentage || 0}%</span>
           <div class="table-actions">
             <button class="btn" onclick="editProduct(${product.id})">✏️</button>
             <button class="btn" onclick="deleteProduct(${product.id})" style="background: #ef4444; color: white;">🗑️</button>

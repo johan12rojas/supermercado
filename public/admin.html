@@ -52,6 +52,7 @@
           <input type="text" id="adminSearch" placeholder="Buscar por nombre o descripción...">
           <select id="adminCategoryFilter">
             <option value="">Todas las categorías</option>
+            <option value="descuentos">🏷️ Descuentos</option>
             <option value="Frutas">🍎 Frutas</option>
             <option value="Lácteos">🥛 Lácteos</option>
             <option value="Panadería">🍞 Panadería</option>
@@ -151,8 +152,22 @@
               <input id="price" name="price" type="number" min="0" step="0.01" required placeholder="0.00">
             </div>
             <div class="form-group">
+              <label for="discount">Descuento (%)</label>
+              <input id="discount" name="discount" type="number" min="0" max="100" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
               <label for="stock">Stock</label>
               <input id="stock" name="stock" type="number" min="0" step="1" required placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="isEco">Producto Ecológico</label>
+              <select id="isEco" name="isEco">
+                <option value="0">No</option>
+                <option value="1">Sí</option>
+              </select>
             </div>
           </div>
 

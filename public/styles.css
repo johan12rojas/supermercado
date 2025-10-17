@@ -1430,6 +1430,268 @@ input:focus,select:focus,textarea:focus{
   box-shadow:var(--shadow);
 }
 
+/* Badge de descuento */
+.discount-badge{
+  position:absolute;
+  top:12px;
+  left:12px;
+  background:#ef4444;
+  color:white;
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:600;
+  z-index:2;
+  animation:pulse 2s infinite;
+  box-shadow:var(--shadow);
+}
+
+.price-container{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+
+.original-price{
+  text-decoration:line-through;
+  color:var(--muted);
+  font-size:14px;
+  opacity:0.7;
+}
+
+.price.discounted{
+  color:#ef4444;
+  font-weight:600;
+}
+
+.item-price{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+
+.current-price.discounted{
+  color:#ef4444;
+  font-weight:600;
+}
+
+.discount-info{
+  background:#fef2f2;
+  color:#dc2626;
+  padding:2px 6px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:600;
+}
+
+@keyframes pulse{
+  0%, 100%{opacity:1;}
+  50%{opacity:0.8;}
+}
+
+/* Estilos para admin - descuentos */
+.price-cell{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+
+.discount-badge-small{
+  background:#ef4444;
+  color:white;
+  padding:1px 4px;
+  border-radius:4px;
+  font-size:10px;
+  font-weight:600;
+}
+
+.table-row .original-price{
+  text-decoration:line-through;
+  color:var(--muted);
+  font-size:12px;
+  opacity:0.7;
+}
+
+.table-row .current-price.discounted{
+  color:#ef4444;
+  font-weight:600;
+}
+
+/* Modal Saber Más - About Modal */
+.about-modal-content{
+  max-width:600px;
+  padding:0;
+  overflow:hidden;
+}
+
+.about-hero{
+  background:linear-gradient(135deg, #22c55e, #16a34a);
+  color:white;
+  padding:32px;
+  text-align:center;
+  position:relative;
+}
+
+.about-image{
+  margin-bottom:20px;
+}
+
+.about-hero-img{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  object-fit:cover;
+  border:4px solid rgba(255,255,255,0.3);
+  box-shadow:0 8px 32px rgba(0,0,0,0.2);
+}
+
+.about-intro h3{
+  font-size:24px;
+  font-weight:700;
+  margin:0 0 8px 0;
+  text-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+
+.about-tagline{
+  font-size:16px;
+  opacity:0.9;
+  margin:0;
+  font-weight:500;
+}
+
+.about-content{
+  padding:32px;
+}
+
+.about-section{
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:24px;
+  padding:20px;
+  background:var(--bg-secondary);
+  border-radius:16px;
+  border-left:4px solid var(--primary);
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.about-section:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.1);
+}
+
+.about-icon{
+  font-size:32px;
+  flex-shrink:0;
+  width:48px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(34, 197, 94, 0.1);
+  border-radius:12px;
+}
+
+.about-text h4{
+  font-size:18px;
+  font-weight:600;
+  color:var(--primary);
+  margin:0 0 8px 0;
+}
+
+.about-text p{
+  color:var(--text);
+  line-height:1.6;
+  margin:0;
+  opacity:0.8;
+}
+
+.about-cta{
+  background:linear-gradient(135deg, var(--primary), var(--primary-2));
+  color:white;
+  padding:32px;
+  text-align:center;
+}
+
+.about-stats{
+  display:flex;
+  justify-content:center;
+  gap:32px;
+  margin-bottom:24px;
+}
+
+.about-stats .stat-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
+
+.about-stats .stat-number{
+  font-size:28px;
+  font-weight:700;
+  color:white;
+}
+
+.about-stats .stat-label{
+  font-size:14px;
+  opacity:0.9;
+  font-weight:500;
+}
+
+.about-cta .btn{
+  background:white;
+  color:var(--primary);
+  font-weight:600;
+  padding:12px 24px;
+  border-radius:12px;
+  transition:all 0.2s ease;
+}
+
+.about-cta .btn:hover{
+  background:rgba(255,255,255,0.9);
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.2);
+}
+
+@media (max-width:768px){
+  .about-modal-content{
+    max-width:90vw;
+  }
+  
+  .about-hero{
+    padding:24px 20px;
+  }
+  
+  .about-content{
+    padding:24px 20px;
+  }
+  
+  .about-cta{
+    padding:24px 20px;
+  }
+  
+  .about-stats{
+    gap:20px;
+  }
+  
+  .about-stats .stat-number{
+    font-size:24px;
+  }
+  
+  .about-section{
+    flex-direction:column;
+    text-align:center;
+  }
+  
+  .about-icon{
+    align-self:center;
+  }
+}
+
 /* Estilos para admin mejorado */
 .admin-hero{
   background:linear-gradient(135deg,var(--primary),var(--primary-2));

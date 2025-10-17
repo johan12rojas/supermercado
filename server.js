@@ -58,22 +58,22 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 app.post('/api/products', (req, res) => {
-  const { name, description, price, image, stock, category, isEco } = req.body;
+  const { name, description, price, image, stock, category, isEco, discount } = req.body;
   if (!name || price == null) return res.status(400).json({ error: 'name y price son obligatorios' });
   const insert = db.prepare(`
-    INSERT INTO products (name, description, price, image, stock, category, isEco)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, description, price, image, stock, category, isEco, discount_percentage)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const info = insert.run(name, description || '', Number(price), image || '', Number(stock || 0), category || null, Number(isEco || 0));
+  const info = insert.run(name, description || '', Number(price), image || '', Number(stock || 0), category || null, Number(isEco || 0), Number(discount || 0));
   res.status(201).json(getProductById(info.lastInsertRowid));
 });
 
 app.put('/api/products/:id', (req, res) => {
-  const { name, description, price, image, stock, category, isEco } = req.body;
+  const { name, description, price, image, stock, category, isEco, discount } = req.body;
   const existing = getProductById(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Producto no encontrado' });
   const update = db.prepare(`
-    UPDATE products SET name = ?, description = ?, price = ?, image = ?, stock = ?, category = ?, isEco = ?
+    UPDATE products SET name = ?, description = ?, price = ?, image = ?, stock = ?, category = ?, isEco = ?, discount_percentage = ?
     WHERE id = ?
   `);
   update.run(
@@ -84,6 +84,7 @@ app.put('/api/products/:id', (req, res) => {
     stock != null ? Number(stock) : existing.stock,
     category ?? existing.category,
     isEco != null ? Number(isEco) : existing.isEco,
+    discount != null ? Number(discount) : existing.discount_percentage,
     req.params.id
   );
   res.json(getProductById(req.params.id));
@@ -105,7 +106,7 @@ app.get('/api/orders', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { items, userId } = req.body; // [{ productId, quantity }, userId]
+  const { items, userId } = req.body; // [{ productId, quantity, price }, userId]
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items es requerido' });
   }
@@ -118,21 +119,26 @@ app.post('/api/orders', (req, res) => {
   try {
     const transaction = db.transaction(() => {
       let total = 0;
-      // Validar stock y calcular total
+      // Validar stock y calcular total usando precio del carrito (con descuento)
       for (const it of items) {
         const p = getForUpdate.get(it.productId);
         if (!p) throw new Error(`Producto ${it.productId} no existe`);
         const qty = Number(it.quantity || 0);
         if (qty <= 0) throw new Error('Cantidad inválida');
         if (p.stock < qty) throw new Error(`Stock insuficiente para ${p.name}`);
-        total += p.price * qty;
+        
+        // Usar precio del carrito (ya con descuento aplicado) si está disponible
+        const itemPrice = it.price ? Number(it.price) : p.price;
+        total += itemPrice * qty;
       }
       const orderInfo = insertOrder.run(total, userId, 'completed');
       const orderId = orderInfo.lastInsertRowid;
       for (const it of items) {
         const p = getForUpdate.get(it.productId);
         const qty = Number(it.quantity);
-        insertItem.run(orderId, p.id, qty, p.price);
+        // Usar precio del carrito (con descuento) para guardar en order_items
+        const itemPrice = it.price ? Number(it.price) : p.price;
+        insertItem.run(orderId, p.id, qty, itemPrice);
         updateStock.run(qty, p.id);
       }
       return { orderId, total };
