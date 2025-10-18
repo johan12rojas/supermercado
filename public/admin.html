@@ -202,6 +202,38 @@
           <h2>Inventario de Productos</h2>
           <div class="card-icon">📋</div>
         </div>
+        <!-- Resumen de Stock -->
+        <div class="stock-summary">
+          <div class="summary-card stock-empty-summary">
+            <div class="summary-icon">🚫</div>
+            <div class="summary-content">
+              <div class="summary-number" id="emptyStock">0</div>
+              <div class="summary-label">Sin Stock</div>
+            </div>
+          </div>
+          <div class="summary-card stock-low-summary">
+            <div class="summary-icon">⚠️</div>
+            <div class="summary-content">
+              <div class="summary-number" id="lowStock">0</div>
+              <div class="summary-label">Stock Bajo (≤5)</div>
+            </div>
+          </div>
+          <div class="summary-card stock-medium-summary">
+            <div class="summary-icon">📊</div>
+            <div class="summary-content">
+              <div class="summary-number" id="mediumStock">0</div>
+              <div class="summary-label">Stock Medio (6-15)</div>
+            </div>
+          </div>
+          <div class="summary-card stock-high-summary">
+            <div class="summary-icon">✅</div>
+            <div class="summary-content">
+              <div class="summary-number" id="highStock">0</div>
+              <div class="summary-label">Stock Alto (>15)</div>
+            </div>
+          </div>
+        </div>
+        
         <div class="products-table">
           <div class="table-header">
             <span>Imagen</span>

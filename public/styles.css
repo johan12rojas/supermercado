@@ -1380,6 +1380,214 @@ input:focus,select:focus,textarea:focus{
   border-color:#334155;
 }
 
+/* Indicadores de Stock */
+.stock-indicator {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  min-width: 40px;
+  display: inline-block;
+}
+
+.stock-empty {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.stock-low {
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.stock-medium {
+  background-color: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.stock-high {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Modo oscuro para indicadores de stock */
+[data-theme="dark"] .stock-empty {
+  background-color: #7f1d1d;
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+[data-theme="dark"] .stock-low {
+  background-color: #78350f;
+  color: #fbbf24;
+  border-color: #92400e;
+}
+
+[data-theme="dark"] .stock-medium {
+  background-color: #1e3a8a;
+  color: #93c5fd;
+  border-color: #1e40af;
+}
+
+[data-theme="dark"] .stock-high {
+  background-color: #14532d;
+  color: #86efac;
+  border-color: #166534;
+}
+
+/* Resumen de Stock */
+.stock-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 0 24px;
+}
+
+.summary-card {
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.summary-icon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.summary-content {
+  flex: 1;
+}
+
+.summary-number {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Colores específicos para cada tipo de stock */
+.stock-empty-summary {
+  border-color: #fecaca;
+  background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+}
+
+.stock-empty-summary .summary-icon {
+  background: #fee2e2;
+}
+
+.stock-empty-summary .summary-number {
+  color: #dc2626;
+}
+
+.stock-low-summary {
+  border-color: #fed7aa;
+  background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+}
+
+.stock-low-summary .summary-icon {
+  background: #fef3c7;
+}
+
+.stock-low-summary .summary-number {
+  color: #d97706;
+}
+
+.stock-medium-summary {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+}
+
+.stock-medium-summary .summary-icon {
+  background: #dbeafe;
+}
+
+.stock-medium-summary .summary-number {
+  color: #2563eb;
+}
+
+.stock-high-summary {
+  border-color: #bbf7d0;
+  background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+}
+
+.stock-high-summary .summary-icon {
+  background: #dcfce7;
+}
+
+.stock-high-summary .summary-number {
+  color: #16a34a;
+}
+
+/* Modo oscuro para resumen de stock */
+[data-theme="dark"] .summary-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .stock-empty-summary {
+  border-color: #991b1b;
+  background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+}
+
+[data-theme="dark"] .stock-empty-summary .summary-icon {
+  background: #7f1d1d;
+}
+
+[data-theme="dark"] .stock-low-summary {
+  border-color: #92400e;
+  background: linear-gradient(135deg, #78350f 0%, #451a03 100%);
+}
+
+[data-theme="dark"] .stock-low-summary .summary-icon {
+  background: #78350f;
+}
+
+[data-theme="dark"] .stock-medium-summary {
+  border-color: #1e40af;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%);
+}
+
+[data-theme="dark"] .stock-medium-summary .summary-icon {
+  background: #1e3a8a;
+}
+
+[data-theme="dark"] .stock-high-summary {
+  border-color: #166534;
+  background: linear-gradient(135deg, #14532d 0%, #052e16 100%);
+}
+
+[data-theme="dark"] .stock-high-summary .summary-icon {
+  background: #14532d;
+}
+
 [data-theme="dark"] .table-item:hover{
   background:#334155;
 }
@@ -1411,9 +1619,6 @@ input:focus,select:focus,textarea:focus{
 }
 
 /* Hero-badge mantiene su color original en modo eco */
-[data-eco="true"] .hero-badge{
-  /* Sin cambios - mantiene el color original */
-}
 
 /* Badge ecológico */
 .eco-badge{

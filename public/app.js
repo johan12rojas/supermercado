@@ -318,6 +318,34 @@ const cart = {
     localStorage.removeItem(this.key);
   },
   
+  // Validar y limpiar carrito de productos inexistentes
+  async validateAndClean() {
+    const items = this.get();
+    if (items.length === 0) return;
+    
+    console.log('Validando productos en el carrito...');
+    const validItems = [];
+    
+    for (const item of items) {
+      try {
+        const product = await api.getProduct(item.productId);
+        if (product) {
+          validItems.push(item);
+          console.log(`Producto válido: ${item.name} (ID: ${item.productId})`);
+        } else {
+          console.warn(`Producto inexistente removido: ${item.name} (ID: ${item.productId})`);
+        }
+      } catch (error) {
+        console.warn(`Error validando producto ${item.productId}:`, error.message);
+      }
+    }
+    
+    if (validItems.length !== items.length) {
+      console.log(`Carrito limpiado: ${items.length - validItems.length} productos inexistentes removidos`);
+      localStorage.setItem(this.key, JSON.stringify(validItems));
+    }
+  },
+  
   // Función para limpiar datos corruptos
   reset() {
     console.log('Resetting cart due to corruption...');
@@ -373,6 +401,13 @@ const api = {
       }
       
       console.log('Enviando payload a API:', payload);
+      console.log('Valores específicos:', {
+        items: items,
+        paymentMethod: paymentMethod,
+        deliveryMethod: deliveryMethod,
+        shippingCost: shippingCost,
+        userId: userId
+      });
       
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -1071,6 +1106,7 @@ async function loadProducts(category = '') {
     const categories = ui.qs('#categories');
     if (categories) {
       const options = [
+        {emoji:'🧺',name:'Todas',value:''},
         {emoji:'🍎',name:'Frutas',value:'Frutas'},
         {emoji:'🥛',name:'Lácteos',value:'Lácteos'},
         {emoji:'🍞',name:'Panadería',value:'Panadería'},
@@ -1110,6 +1146,9 @@ async function loadProducts(category = '') {
         };
       });
     }
+    
+    // Validar y limpiar carrito antes de cargar productos
+    await cart.validateAndClean();
     
     // Load initial products
     await loadProducts();
@@ -1491,6 +1530,39 @@ function setupCheckoutEventListeners() {
 
 // Validar formulario de dirección
 function validateAddressForm() {
+  // Si es pickup, solo validar nombre y teléfono
+  if (checkoutData.delivery === 'pickup') {
+    const requiredFields = ['firstName', 'lastName', 'phone'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+      const field = ui.qs(`#${fieldId}`);
+      if (field && !field.value.trim()) {
+        field.style.borderColor = '#ef4444';
+        isValid = false;
+      } else if (field) {
+        field.style.borderColor = '';
+      }
+    });
+    
+    if (!isValid) {
+      alert('Para recoger en tienda, por favor completa al menos tu nombre y teléfono');
+    } else {
+      // Guardar datos mínimos para pickup
+      checkoutData.address = {
+        firstName: ui.qs('#firstName').value,
+        lastName: ui.qs('#lastName').value,
+        phone: ui.qs('#phone').value,
+        address: 'Recoger en tienda',
+        city: 'Recoger en tienda',
+        postalCode: 'N/A'
+      };
+    }
+    
+    return isValid;
+  }
+  
+  // Para entregas normales, validar todos los campos
   const requiredFields = ['firstName', 'lastName', 'address', 'city', 'postalCode', 'phone'];
   let isValid = true;
   
@@ -1554,11 +1626,20 @@ function updateCheckoutSummary() {
 
 // Obtener costo de envío
 function getShippingCost() {
+  console.log('getShippingCost - checkoutData.delivery:', checkoutData.delivery);
+  
+  if (!checkoutData.delivery) {
+    console.warn('checkoutData.delivery no está definido, usando standard');
+    return 4.99;
+  }
+  
   switch (checkoutData.delivery) {
     case 'express': return 9.99;
     case 'standard': return 4.99;
     case 'pickup': return 0;
-    default: return 4.99;
+    default: 
+      console.warn('Método de entrega desconocido:', checkoutData.delivery);
+      return 4.99;
   }
 }
 
@@ -1614,6 +1695,8 @@ async function completeOrder() {
       return;
     }
     
+    console.log('checkoutData actual antes de procesar:', checkoutData);
+    
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.08;
     const shipping = getShippingCost();
@@ -1649,8 +1732,28 @@ async function completeOrder() {
       payment: checkoutData.payment,
       delivery: checkoutData.delivery,
       shipping: shipping,
-      payload: payload
+      payload: payload,
+      currentUser: currentUser
     });
+    
+    // Validar que todos los datos requeridos estén presentes
+    if (!checkoutData.payment) {
+      console.error('Error: paymentMethod no está definido');
+      alert('Error: Método de pago no seleccionado');
+      return;
+    }
+    
+    if (!checkoutData.delivery) {
+      console.error('Error: deliveryMethod no está definido');
+      alert('Error: Método de entrega no seleccionado');
+      return;
+    }
+    
+    if (shipping === undefined || shipping === null) {
+      console.error('Error: shippingCost no está definido');
+      alert('Error: Costo de envío no calculado');
+      return;
+    }
     
     const order = await api.createOrder(payload, currentUser.id, checkoutData.payment, checkoutData.delivery, shipping);
     console.log('Pedido creado:', order);
@@ -1871,6 +1974,47 @@ async function loadCategories() {
   }
 }
 
+// Función para determinar la clase CSS del stock según el nivel
+function getStockClass(stock) {
+  const stockNumber = parseInt(stock);
+  if (stockNumber === 0) {
+    return 'stock-empty'; // Sin stock
+  } else if (stockNumber <= 5) {
+    return 'stock-low'; // Stock bajo
+  } else if (stockNumber <= 15) {
+    return 'stock-medium'; // Stock medio
+  } else {
+    return 'stock-high'; // Stock alto
+  }
+}
+
+// Función para actualizar el resumen de stock
+function updateStockSummary(products) {
+  const emptyStock = products.filter(p => parseInt(p.stock) === 0).length;
+  const lowStock = products.filter(p => parseInt(p.stock) > 0 && parseInt(p.stock) <= 5).length;
+  const mediumStock = products.filter(p => parseInt(p.stock) > 5 && parseInt(p.stock) <= 15).length;
+  const highStock = products.filter(p => parseInt(p.stock) > 15).length;
+  
+  // Actualizar los números en el DOM
+  const emptyElement = ui.qs('#emptyStock');
+  const lowElement = ui.qs('#lowStock');
+  const mediumElement = ui.qs('#mediumStock');
+  const highElement = ui.qs('#highStock');
+  
+  if (emptyElement) emptyElement.textContent = emptyStock;
+  if (lowElement) lowElement.textContent = lowStock;
+  if (mediumElement) mediumElement.textContent = mediumStock;
+  if (highElement) highElement.textContent = highStock;
+  
+  console.log('Resumen de stock actualizado:', {
+    empty: emptyStock,
+    low: lowStock,
+    medium: mediumStock,
+    high: highStock,
+    total: products.length
+  });
+}
+
 // Función para cargar productos en el admin
 async function loadAdminProducts(query = '', category = '') {
   try {
@@ -1894,7 +2038,7 @@ async function loadAdminProducts(query = '', category = '') {
           </div>
           <span>${product.name}</span>
           <span>$${product.price}</span>
-          <span>${product.stock}</span>
+          <span class="stock-indicator ${getStockClass(product.stock)}">${product.stock}</span>
           <span>${product.category || '-'}</span>
           <span>${product.isEco ? '🌿 Sí' : '❌ No'}</span>
           <span>${product.discount_percentage || 0}%</span>
@@ -1904,6 +2048,9 @@ async function loadAdminProducts(query = '', category = '') {
           </div>
         </div>
       `).join('');
+      
+      // Actualizar resumen de stock
+      updateStockSummary(products);
     }
   } catch (error) {
     console.error('Error cargando productos:', error);

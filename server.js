@@ -118,12 +118,33 @@ app.post('/api/orders', (req, res) => {
     shippingCost
   });
   
+  console.log('Validaciones detalladas:', {
+    'items es array': Array.isArray(items),
+    'items length': items?.length,
+    'paymentMethod existe': !!paymentMethod,
+    'paymentMethod valor': paymentMethod,
+    'deliveryMethod existe': !!deliveryMethod,
+    'deliveryMethod valor': deliveryMethod,
+    'shippingCost existe': shippingCost !== undefined && shippingCost !== null,
+    'shippingCost valor': shippingCost,
+    'shippingCost tipo': typeof shippingCost
+  });
+  
   if (!Array.isArray(items) || items.length === 0) {
+    console.log('ERROR: items no es válido');
     return res.status(400).json({ error: 'items es requerido' });
   }
   
-  if (!paymentMethod || !deliveryMethod || !shippingCost) {
-    return res.status(400).json({ error: 'paymentMethod, deliveryMethod y shippingCost son requeridos' });
+  if (!paymentMethod || !deliveryMethod || shippingCost === undefined || shippingCost === null || isNaN(shippingCost)) {
+    console.log('ERROR: Faltan datos requeridos');
+    return res.status(400).json({ 
+      error: 'paymentMethod, deliveryMethod y shippingCost son requeridos',
+      details: {
+        paymentMethod: paymentMethod,
+        deliveryMethod: deliveryMethod,
+        shippingCost: shippingCost
+      }
+    });
   }
 
   const getForUpdate = db.prepare('SELECT * FROM products WHERE id = ?');
