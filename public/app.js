@@ -1598,17 +1598,43 @@ function updateCheckoutSummary() {
   const items = cart.get();
   const summaryItems = ui.qs('#checkoutSummaryItems');
   
+  console.log('=== ACTUALIZANDO RESUMEN DEL CHECKOUT ===');
+  console.log('Items en carrito:', items);
+  console.log('Elemento summaryItems encontrado:', !!summaryItems);
+  console.log('Elemento summaryItems:', summaryItems);
+  
   if (summaryItems) {
-    summaryItems.innerHTML = items.map(item => `
-      <div class="summary-item">
-        <img src="${item.image || '/img/placeholder.png'}" alt="${item.name}">
-        <div class="summary-item-info">
-          <div class="summary-item-name">${item.name}</div>
-          <div class="summary-item-details">Cantidad: ${item.quantity}</div>
-        </div>
-        <div class="summary-item-price">${ui.money(item.price * item.quantity)}</div>
-      </div>
-    `).join('');
+    if (items.length === 0) {
+      console.log('Carrito vacío, mostrando mensaje');
+      summaryItems.innerHTML = '<div class="empty-summary">No hay productos en el carrito</div>';
+    } else {
+      console.log('Renderizando', items.length, 'productos');
+      summaryItems.innerHTML = items.map(item => {
+        const imageSrc = item.image && item.image.trim() !== '' ? item.image : '/img/placeholder.png';
+        console.log('Item en resumen:', { 
+          name: item.name, 
+          image: imageSrc, 
+          quantity: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity
+        });
+        
+        return `
+          <div class="summary-item">
+            <img src="${imageSrc}" alt="${item.name}" onerror="this.src='/img/placeholder.png'">
+            <div class="summary-item-info">
+              <div class="summary-item-name">${item.name}</div>
+              <div class="summary-item-details">Cantidad: ${item.quantity}</div>
+            </div>
+            <div class="summary-item-price">${ui.money(item.price * item.quantity)}</div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('HTML generado:', summaryItems.innerHTML);
+    }
+  } else {
+    console.error('No se encontró el elemento #checkoutSummaryItems');
   }
   
   // Calcular totales
