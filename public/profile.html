@@ -508,17 +508,76 @@
             }
           }
           
+          // Información de pago y entrega
+          const paymentMethod = order.payment_method || 'card';
+          const deliveryMethod = order.delivery_method || 'standard';
+          const shippingCost = order.shipping_cost || 4.99;
+          
+          // Calcular subtotal (total - shipping - tax)
+          const tax = (order.total - shippingCost) * 0.08 / 1.08; // Impuesto aproximado
+          const subtotal = order.total - shippingCost - tax;
+          
+          // Iconos para métodos de pago y entrega
+          const paymentIcon = paymentMethod === 'card' ? '💳' : '💵';
+          const deliveryIcon = deliveryMethod === 'express' ? '⚡' : 
+                             deliveryMethod === 'pickup' ? '🏪' : '🚚';
+          
+          const paymentText = paymentMethod === 'card' ? 'Tarjeta' : 'Contra Entrega';
+          const deliveryText = deliveryMethod === 'express' ? 'Express (1-2h)' :
+                             deliveryMethod === 'pickup' ? 'Recoger en Tienda' : 'Estándar';
+          
           return `
-            <div class="order-item">
+            <div class="order-card">
               <div class="order-header">
-                <span class="order-id">Pedido #${order.id}</span>
-                <span class="order-date">${formattedDate}</span>
-                <span class="order-total">$${order.total.toFixed(2)}</span>
+                <div class="order-id-section">
+                  <span class="order-id">Pedido #${order.id}</span>
+                  <span class="order-status ${order.status === 'completed' ? 'completed' : 'pending'}">
+                    ${order.status === 'completed' ? '✅ Completado' : '⏳ ' + order.status}
+                  </span>
+                </div>
+                <div class="order-actions">
+                  <button class="delete-order-btn" onclick="deleteOrder(${order.id})" title="Eliminar pedido">
+                    🗑️
+                  </button>
+                  <div class="order-date">${formattedDate}</div>
+                </div>
               </div>
-              <div class="order-items">
-                <div class="order-status">Estado: ${order.status === 'completed' ? 'Completado' : order.status}</div>
-                <div class="order-summary">${itemsCount} productos</div>
-                <div class="order-details">${itemsSummary}</div>
+              
+              <div class="order-content">
+                <div class="order-items-info">
+                  <div class="items-count">${itemsCount} productos</div>
+                  <div class="items-summary">${itemsSummary}</div>
+                </div>
+                
+                <div class="order-methods">
+                  <div class="method-item">
+                    <span class="method-icon">${paymentIcon}</span>
+                    <span class="method-text">${paymentText}</span>
+                  </div>
+                  <div class="method-item">
+                    <span class="method-icon">${deliveryIcon}</span>
+                    <span class="method-text">${deliveryText}</span>
+                  </div>
+                </div>
+                
+                <div class="order-totals">
+                  <div class="total-line">
+                    <span>Subtotal:</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div class="total-line">
+                    <span>Envío:</span>
+                    <span>$${shippingCost.toFixed(2)}</span>
+                  </div>
+                  <div class="total-line">
+                    <span>Impuesto:</span>
+                    <span>$${tax.toFixed(2)}</span>
+                  </div>
+                  <div class="total-line total-final">
+                    <span>Total:</span>
+                    <span>$${order.total.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           `;
@@ -529,6 +588,7 @@
         ordersList.innerHTML = '<div class="empty-state">Error cargando el historial de pedidos</div>';
       }
     }
+    
     
     async function loadStats() {
       const userId = localStorage.getItem('currentUserId');

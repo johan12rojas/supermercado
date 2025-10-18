@@ -230,6 +230,214 @@
     </div>
   </div>
 
+  <!-- Sistema de Checkout Multi-paso -->
+  <div id="checkoutModal" class="checkout-modal hidden">
+    <div class="checkout-container">
+      <!-- Header del Checkout -->
+      <div class="checkout-header">
+        <button class="checkout-back-btn" id="checkoutBackBtn">
+          <span class="back-icon">←</span>
+          <span>Volver</span>
+        </button>
+        
+        <!-- Indicador de pasos -->
+        <div class="checkout-steps">
+          <div class="step active" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-label">Dirección</div>
+          </div>
+          <div class="step" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-label">Entrega</div>
+          </div>
+          <div class="step" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-label">Pago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido principal del checkout -->
+      <div class="checkout-content">
+        <!-- Panel izquierdo - Formularios -->
+        <div class="checkout-main">
+          
+          <!-- Paso 1: Dirección -->
+          <div class="checkout-step" id="step1">
+            <div class="step-card">
+              <div class="step-header">
+                <div class="step-icon">📍</div>
+                <h2>Dirección de Envío</h2>
+              </div>
+              
+              <form id="addressForm" class="checkout-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="firstName">Nombre</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="lastName">Apellido</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="address">Dirección</label>
+                  <input type="text" id="address" name="address" placeholder="Calle, número, colonia" required>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="city">Ciudad</label>
+                    <input type="text" id="city" name="city" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="postalCode">Código Postal</label>
+                    <input type="text" id="postalCode" name="postalCode" required>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="phone">Número de Teléfono</label>
+                  <input type="tel" id="phone" name="phone" placeholder="+52 (55) 1234-5678" required>
+                </div>
+                
+                <!-- Botones directamente debajo del teléfono -->
+                <div class="address-buttons">
+                  <button type="button" class="btn secondary" id="backToCartBtn">Volver al Carrito</button>
+                  <button type="button" class="btn primary" id="continueToDeliveryBtn">Continuar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Paso 2: Entrega -->
+          <div class="checkout-step hidden" id="step2">
+            <div class="step-card">
+              <div class="step-header">
+                <div class="step-icon">🚚</div>
+                <h2>Método de Entrega</h2>
+              </div>
+              
+              <div class="delivery-options">
+                <div class="delivery-option" data-delivery="express">
+                  <div class="delivery-info">
+                    <div class="delivery-name">Entrega Express</div>
+                    <div class="delivery-time">1-2 horas</div>
+                  </div>
+                  <div class="delivery-price">$9.99</div>
+                </div>
+                
+                <div class="delivery-option selected" data-delivery="standard">
+                  <div class="delivery-info">
+                    <div class="delivery-name">Entrega Estándar</div>
+                    <div class="delivery-time">Mismo día</div>
+                  </div>
+                  <div class="delivery-price">$4.99</div>
+                </div>
+                
+                <div class="delivery-option" data-delivery="pickup">
+                  <div class="delivery-info">
+                    <div class="delivery-name">Recoger en Tienda</div>
+                    <div class="delivery-time">Recoger en 2 horas</div>
+                  </div>
+                  <div class="delivery-price">GRATIS</div>
+                </div>
+              </div>
+              
+              <div class="step-actions">
+                <button type="button" class="btn secondary" id="backToAddressBtn">Anterior</button>
+                <button type="button" class="btn primary" id="continueToPaymentBtn">Continuar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 3: Pago -->
+          <div class="checkout-step hidden" id="step3">
+            <div class="step-card">
+              <div class="step-header">
+                <div class="step-icon">💳</div>
+                <h2>Método de Pago</h2>
+              </div>
+              
+              <div class="payment-options">
+                <div class="payment-option selected" data-payment="card">
+                  <div class="payment-icon">💳</div>
+                  <div class="payment-name">Tarjeta de Crédito</div>
+                </div>
+                
+                <div class="payment-option" data-payment="cash">
+                  <div class="payment-icon">💵</div>
+                  <div class="payment-name">Contra Entrega</div>
+                </div>
+              </div>
+              
+              <!-- Formulario de tarjeta -->
+              <div class="card-form" id="cardForm">
+                <div class="form-group">
+                  <label for="cardNumber">Número de Tarjeta</label>
+                  <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="expiryDate">Fecha de Vencimiento</label>
+                    <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/AA" maxlength="5">
+                  </div>
+                  <div class="form-group">
+                    <label for="cvv">CVV</label>
+                    <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="3">
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="cardName">Nombre en la Tarjeta</label>
+                  <input type="text" id="cardName" name="cardName" placeholder="Juan Pérez">
+                </div>
+              </div>
+              
+              <div class="step-actions">
+                <button type="button" class="btn secondary" id="backToDeliveryBtn">Anterior</button>
+                <button type="button" class="btn primary" id="completeOrderBtn">Finalizar Pedido</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel derecho - Resumen del pedido -->
+        <div class="checkout-summary">
+          <div class="summary-card">
+            <h3>Resumen del Pedido</h3>
+            
+            <div class="summary-items" id="checkoutSummaryItems">
+              <!-- Los items se cargarán dinámicamente -->
+            </div>
+            
+            <div class="summary-totals">
+              <div class="summary-line">
+                <span>Subtotal</span>
+                <span id="checkoutSubtotal">$0.00</span>
+              </div>
+              <div class="summary-line">
+                <span>Impuesto</span>
+                <span id="checkoutTax">$0.00</span>
+              </div>
+              <div class="summary-line">
+                <span>Envío</span>
+                <span id="checkoutShipping">$0.00</span>
+              </div>
+              <div class="summary-line total">
+                <span>Total</span>
+                <span id="checkoutTotal">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/app.js"></script>
 </body>
 </html>

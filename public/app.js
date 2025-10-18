@@ -360,12 +360,19 @@ const api = {
     }
   },
   
-  async createOrder(items, userId = null) {
+  async createOrder(items, userId = null, paymentMethod = 'card', deliveryMethod = 'standard', shippingCost = 4.99) {
     try {
-      const payload = { items };
+      const payload = { 
+        items, 
+        paymentMethod, 
+        deliveryMethod, 
+        shippingCost 
+      };
       if (userId) {
         payload.userId = userId;
       }
+      
+      console.log('Enviando payload a API:', payload);
       
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -384,7 +391,48 @@ const api = {
     }
   },
   
-  // Product CRUD methods
+  // Eliminar pedido individual
+  async deleteOrder(orderId, userId) {
+    try {
+      console.log('Eliminando pedido:', { orderId, userId });
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      
+      console.log('Respuesta del servidor:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error eliminando pedido:', error);
+      throw error;
+    }
+  },
+  
+  // Eliminar todos los pedidos de un usuario
+  async deleteAllOrders(userId) {
+    try {
+      const response = await fetch(`/api/orders/user/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error eliminando todos los pedidos:', error);
+      throw error;
+    }
+  },
+  
   async createProduct(productData) {
     try {
       const response = await fetch('/api/products', {
@@ -721,43 +769,6 @@ function openAccountModal() {
   // Event listeners
   ui.qs('#amClose')?.addEventListener('click', closeModal);
   
-  // Botón Comprar Ahora - Scroll a productos
-  ui.qs('#shopNow')?.addEventListener('click', () => {
-    // Scroll suave a la sección de productos
-    const grid = ui.qs('#grid');
-    if (grid) {
-      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Opcional: mostrar un mensaje de bienvenida
-      setTimeout(() => {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: var(--primary);
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          font-weight: 600;
-          z-index: 1000;
-          animation: slideInRight 0.3s ease;
-        `;
-        notification.textContent = '🛒 ¡Explora nuestros productos!';
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-          notification.style.animation = 'slideOutRight 0.3s ease';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
-      }, 500);
-    }
-  });
-
-  // Modal Saber Más - Información detallada
-  ui.qs('#learnMore')?.addEventListener('click', () => {
-    alert('🌱 EcoMarket - Tu supermercado ecológico de confianza!\n\n🍃 Productos 100% ecológicos\n🚚 Delivery en menos de 2 horas\n💚 Comprometidos con el medio ambiente\n⭐ Calidad garantizada\n\n🏷️ ¡Nueva sección de DESCUENTOS disponible!\n💚 Modo ecológico para productos sostenibles\n\n¡Gracias por elegir EcoMarket!');
-  });
-  
   ui.qs('#amLogin')?.addEventListener('click', async () => {
     const email = ui.qs('#amEmail')?.value;
     const password = ui.qs('#amPass')?.value;
@@ -905,76 +916,32 @@ async function bootIndex() {
     console.log('Features cargadas');
   }
     
-    // Load categories
-    const categories = ui.qs('#categories');
-    if (categories) {
-      const options = [
-        {emoji:'🧺',name:'Todas',value:''},
-        {emoji:'🏷️',name:'Descuentos',value:'descuentos'},
-        {emoji:'🍎',name:'Frutas',value:'Frutas'},
-        {emoji:'🥛',name:'Lácteos',value:'Lácteos'},
-        {emoji:'🍞',name:'Panadería',value:'Panadería'},
-        {emoji:'🥚',name:'Huevos',value:'Huevos'},
-        {emoji:'🥤',name:'Bebidas',value:'Bebidas'},
-        {emoji:'🧴',name:'Aseo',value:'Aseo'},
-        {emoji:'🧽',name:'Limpieza',value:'Limpieza'},
-        {emoji:'🎮',name:'Juegos',value:'Juegos'},
-        {emoji:'🥩',name:'Carnes',value:'Carnes'},
-        {emoji:'🌾',name:'Granos',value:'Granos'},
-        {emoji:'🍝',name:'Pastas',value:'Pastas'},
-        {emoji:'🥬',name:'Verduras',value:'Verduras'},
-        {emoji:'💊',name:'Medicamentos',value:'Medicamentos'}
-      ];
-      
-      categories.innerHTML = options.map((o, i) => `
-        <button class="cat ${i === 0 ? 'active' : ''}" data-cat="${o.value}">
-          <div class="emoji">${o.emoji}</div>
-          <div>${o.name}</div>
-        </button>
-      `).join('');
-      
-      // Agregar indicador de modo ecológico
-      updateEcoModeIndicator();
-      
-      console.log('Categorías cargadas');
-      
-      // Category click handler
-      categories.onclick = (e) => {
-        const el = e.target.closest('[data-cat]');
-        if (!el) return;
-        
-        const category = el.dataset.cat;
-        categories.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        
-        loadProducts(category);
-      };
+    
+
+// Load products function
+async function loadProducts(category = '') {
+  try {
+    console.log('Cargando productos para categoría:', category);
+    let products;
+    
+    if (category === 'descuentos') {
+      // Cargar todos los productos y filtrar solo los que tienen descuento
+      const allProducts = await api.listProducts({});
+      products = allProducts.filter(p => p.discount_percentage && p.discount_percentage > 0);
+    } else {
+      products = await api.listProducts({ category });
     }
     
-    // Load products function
-    async function loadProducts(category = '') {
-      try {
-        console.log('Cargando productos para categoría:', category);
-        let products;
-        
-        if (category === 'descuentos') {
-          // Cargar todos los productos y filtrar solo los que tienen descuento
-          const allProducts = await api.listProducts({});
-          products = allProducts.filter(p => p.discount_percentage && p.discount_percentage > 0);
-        } else {
-          products = await api.listProducts({ category });
-        }
-        
-        ui.renderProducts(products);
-        console.log('Productos renderizados:', products.length);
-      } catch (error) {
-        console.error('Error cargando productos:', error);
-        const grid = ui.qs('#grid');
-        if (grid) {
-          grid.innerHTML = '<div class="error">Error cargando productos. Intenta recargar la página.</div>';
-        }
-      }
+    ui.renderProducts(products);
+    console.log('Productos renderizados:', products.length);
+  } catch (error) {
+    console.error('Error cargando productos:', error);
+    const grid = ui.qs('#grid');
+    if (grid) {
+      grid.innerHTML = '<div class="error">Error cargando productos. Intenta recargar la página.</div>';
     }
+  }
+}
     
     // Event listeners
     const search = ui.qs('#search');
@@ -1087,24 +1054,8 @@ async function bootIndex() {
         return;
       }
       
-      try {
-        const payload = items.map(i => ({ 
-          productId: i.productId, 
-          quantity: i.quantity,
-          price: i.price  // Enviar el precio con descuento del carrito
-        }));
-        
-        const userId = currentUser.id;
-        const order = await api.createOrder(payload, userId);
-        alert('Pedido creado #' + order.id + ' por ' + ui.money(order.total));
-        cart.clear();
-        ui.renderCart();
-        ui.updateCartBadge();
-        loadProducts();
-      } catch (error) {
-        console.error('Error creando pedido:', error);
-        alert('Error al crear pedido');
-      }
+      // Usuario autenticado - abrir sistema de checkout multi-paso
+      openCheckoutModal();
     });
     
     ui.qs('#clearCartBtn')?.addEventListener('click', () => {
@@ -1116,13 +1067,635 @@ async function bootIndex() {
       }
     });
     
+    // Load categories
+    const categories = ui.qs('#categories');
+    if (categories) {
+      const options = [
+        {emoji:'🍎',name:'Frutas',value:'Frutas'},
+        {emoji:'🥛',name:'Lácteos',value:'Lácteos'},
+        {emoji:'🍞',name:'Panadería',value:'Panadería'},
+        {emoji:'🥚',name:'Huevos',value:'Huevos'},
+        {emoji:'🥤',name:'Bebidas',value:'Bebidas'},
+        {emoji:'🧴',name:'Aseo',value:'Aseo'},
+        {emoji:'🧽',name:'Limpieza',value:'Limpieza'},
+        {emoji:'🎮',name:'Juegos',value:'Juegos'},
+        {emoji:'🥩',name:'Carnes',value:'Carnes'},
+        {emoji:'🌾',name:'Granos',value:'Granos'},
+        {emoji:'🍝',name:'Pastas',value:'Pastas'},
+        {emoji:'🥬',name:'Verduras',value:'Verduras'},
+        {emoji:'💊',name:'Medicamentos',value:'Medicamentos'},
+        {emoji:'🏷️',name:'Descuentos',value:'descuentos'}
+      ];
+      
+      categories.innerHTML = options.map((o, i) => `
+        <button class="cat ${i === 0 ? 'active' : ''}" data-cat="${o.value}">
+          <div class="emoji">${o.emoji}</div>
+          <div>${o.name}</div>
+        </button>
+      `).join('');
+      
+      // Agregar indicador de modo ecológico
+      updateEcoModeIndicator();
+      
+      console.log('Categorías cargadas');
+      
+      // Event listeners para categorías
+      categories.querySelectorAll('.cat').forEach(btn => {
+        btn.onclick = () => {
+          categories.querySelectorAll('.cat').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const category = btn.dataset.cat;
+          console.log('Categoría seleccionada:', category);
+          loadProducts(category);
+        };
+      });
+    }
+    
     // Load initial products
     await loadProducts();
+    
+    // Event listeners para botones hero
+    ui.qs('#shopNow')?.addEventListener('click', () => {
+      // Scroll suave a la sección de productos
+      const grid = ui.qs('#grid');
+      if (grid) {
+        grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Opcional: mostrar un mensaje de bienvenida
+        setTimeout(() => {
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+          `;
+          notification.textContent = '🛒 ¡Explora nuestros productos!';
+          document.body.appendChild(notification);
+          
+          setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+          }, 3000);
+        }, 500);
+      }
+    });
+
+    ui.qs('#learnMore')?.addEventListener('click', () => {
+      alert('🌱 EcoMarket - Tu supermercado ecológico de confianza!\n\n🍃 Productos 100% ecológicos\n🚚 Delivery en menos de 2 horas\n💚 Comprometidos con el medio ambiente\n⭐ Calidad garantizada\n\n🏷️ ¡Nueva sección de DESCUENTOS disponible!\n💚 Modo ecológico para productos sostenibles\n\n¡Gracias por elegir EcoMarket!');
+    });
     
     console.log('bootIndex completado exitosamente');
     
   } catch (error) {
     console.error('Error en bootIndex:', error);
+  }
+}
+
+// ===== SISTEMA DE CHECKOUT MULTI-PASO =====
+
+// Variables globales para el checkout
+let checkoutData = {
+  currentStep: 1,
+  address: {},
+  delivery: 'standard',
+  payment: 'card',
+  cardData: {}
+};
+
+// Abrir modal de checkout
+function openCheckoutModal() {
+  const modal = ui.qs('#checkoutModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Inicializar checkout
+    initializeCheckout();
+    updateCheckoutSummary();
+  }
+}
+
+// Cerrar modal de checkout
+function closeCheckoutModal() {
+  const modal = ui.qs('#checkoutModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    
+    // Resetear datos
+    checkoutData = {
+      currentStep: 1,
+      address: {},
+      delivery: 'standard',
+      payment: 'card',
+      cardData: {}
+    };
+  }
+}
+
+// Inicializar checkout
+function initializeCheckout() {
+  console.log('Inicializando checkout...');
+  checkoutData.currentStep = 1;
+  
+  // Establecer valores por defecto
+  checkoutData.payment = 'card';
+  checkoutData.delivery = 'standard';
+  
+  console.log('Valores por defecto establecidos:', {
+    payment: checkoutData.payment,
+    delivery: checkoutData.delivery
+  });
+  
+  showCheckoutStep(1);
+  setupCheckoutEventListeners();
+  
+  // Forzar visibilidad de botones
+  setTimeout(() => {
+    forceButtonVisibility();
+  }, 100);
+  
+  console.log('Checkout inicializado');
+}
+
+// Forzar visibilidad de botones
+function forceButtonVisibility() {
+  console.log('Forzando visibilidad de botones...');
+  
+  // Botones de dirección
+  const addressButtons = ui.qsa('.address-buttons');
+  addressButtons.forEach(actions => {
+    actions.style.display = 'flex';
+    actions.style.visibility = 'visible';
+    actions.style.opacity = '1';
+    console.log('Address buttons forzado:', actions);
+  });
+  
+  const addressBtnElements = ui.qsa('.address-buttons .btn');
+  addressBtnElements.forEach(btn => {
+    btn.style.display = 'inline-block';
+    btn.style.visibility = 'visible';
+    btn.style.opacity = '1';
+    console.log('Botón de dirección forzado:', btn);
+  });
+  
+  // Botones de step-actions (para otros pasos)
+  const stepActions = ui.qsa('.step-actions');
+  stepActions.forEach(actions => {
+    actions.style.display = 'flex';
+    actions.style.visibility = 'visible';
+    actions.style.opacity = '1';
+    console.log('Step actions forzado:', actions);
+  });
+  
+  const buttons = ui.qsa('.step-actions .btn');
+  buttons.forEach(btn => {
+    btn.style.display = 'inline-block';
+    btn.style.visibility = 'visible';
+    btn.style.opacity = '1';
+    console.log('Botón forzado:', btn);
+  });
+}
+
+// Mostrar paso específico del checkout
+function showCheckoutStep(step) {
+  console.log(`Mostrando paso ${step}`);
+  
+  // Ocultar todos los pasos
+  ui.qsa('.checkout-step').forEach(s => s.classList.add('hidden'));
+  
+  // Mostrar paso actual
+  const currentStepElement = ui.qs(`#step${step}`);
+  if (currentStepElement) {
+    currentStepElement.classList.remove('hidden');
+    console.log(`Paso ${step} mostrado`);
+    
+    // Debug específico para paso 1
+    if (step === 1) {
+      const addressButtons = ui.qs('.address-buttons');
+      const continueBtn = ui.qs('#continueToDeliveryBtn');
+      console.log('Address buttons encontrado:', addressButtons);
+      console.log('Botón continuar encontrado:', continueBtn);
+      
+      if (addressButtons) {
+        console.log('Address buttons visible:', addressButtons.style.display);
+        console.log('Address buttons opacity:', addressButtons.style.opacity);
+      }
+    }
+    
+    // Reconfigurar event listeners cuando se muestra un paso
+    setTimeout(() => {
+      setupStepEventListeners(step);
+    }, 100);
+  } else {
+    console.error(`Paso ${step} no encontrado`);
+  }
+  
+  // Actualizar indicadores de pasos
+  ui.qsa('.step').forEach((s, index) => {
+    const stepNumber = index + 1;
+    s.classList.remove('active', 'completed');
+    
+    if (stepNumber === step) {
+      s.classList.add('active');
+    } else if (stepNumber < step) {
+      s.classList.add('completed');
+    }
+  });
+  
+  checkoutData.currentStep = step;
+}
+
+// Configurar event listeners específicos para cada paso
+function setupStepEventListeners(step) {
+  console.log(`Configurando event listeners para paso ${step}`);
+  
+  if (step === 2) {
+    // Event listeners para opciones de entrega
+    ui.qsa('.delivery-option').forEach(option => {
+      if (!option.hasAttribute('data-delivery-listener')) {
+        option.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Click en opción de entrega:', option.dataset.delivery);
+          
+          ui.qsa('.delivery-option').forEach(o => o.classList.remove('selected'));
+          option.classList.add('selected');
+          checkoutData.delivery = option.dataset.delivery;
+          
+          console.log('Método de entrega seleccionado:', checkoutData.delivery);
+          console.log('checkoutData actualizado:', checkoutData);
+        });
+        option.setAttribute('data-delivery-listener', 'true');
+      }
+    });
+  }
+  
+  if (step === 3) {
+    // Event listeners para opciones de pago
+    ui.qsa('.payment-option').forEach(option => {
+      if (!option.hasAttribute('data-payment-listener')) {
+        option.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Click en opción de pago:', option.dataset.payment);
+          
+          ui.qsa('.payment-option').forEach(o => o.classList.remove('selected'));
+          option.classList.add('selected');
+          checkoutData.payment = option.dataset.payment;
+          
+          console.log('Método de pago seleccionado:', checkoutData.payment);
+          console.log('checkoutData actualizado:', checkoutData);
+          
+          // Mostrar/ocultar formulario de tarjeta
+          const cardForm = ui.qs('#cardForm');
+          if (cardForm) {
+            cardForm.style.display = checkoutData.payment === 'card' ? 'block' : 'none';
+          }
+        });
+        option.setAttribute('data-payment-listener', 'true');
+      }
+    });
+  }
+}
+
+// Configurar event listeners del checkout
+function setupCheckoutEventListeners() {
+  console.log('Configurando event listeners del checkout...');
+  
+  // Limpiar event listeners existentes para evitar duplicados
+  const existingListeners = document.querySelectorAll('[data-checkout-listener]');
+  existingListeners.forEach(el => el.removeAttribute('data-checkout-listener'));
+  
+  // Botón volver del header
+  const backBtn = ui.qs('#checkoutBackBtn');
+  if (backBtn && !backBtn.hasAttribute('data-checkout-listener')) {
+    backBtn.addEventListener('click', () => {
+      if (checkoutData.currentStep === 1) {
+        closeCheckoutModal();
+      } else {
+        showCheckoutStep(checkoutData.currentStep - 1);
+      }
+    });
+    backBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  // Paso 1: Dirección
+  const backToCartBtn = ui.qs('#backToCartBtn');
+  if (backToCartBtn && !backToCartBtn.hasAttribute('data-checkout-listener')) {
+    backToCartBtn.addEventListener('click', closeCheckoutModal);
+    backToCartBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  const continueBtn = ui.qs('#continueToDeliveryBtn');
+  console.log('Botón continuar encontrado:', continueBtn);
+  if (continueBtn && !continueBtn.hasAttribute('data-checkout-listener')) {
+    console.log('Agregando event listener al botón continuar');
+    continueBtn.addEventListener('click', () => {
+      console.log('Botón Continuar clickeado');
+      if (validateAddressForm()) {
+        console.log('Formulario válido, avanzando al paso 2');
+        showCheckoutStep(2);
+      } else {
+        console.log('Formulario inválido');
+      }
+    });
+    continueBtn.setAttribute('data-checkout-listener', 'true');
+  } else if (continueBtn) {
+    console.log('Botón continuar ya tiene event listener');
+  } else {
+    console.log('Botón continuar no encontrado');
+  }
+  
+  // Paso 2: Entrega
+  const backToAddressBtn = ui.qs('#backToAddressBtn');
+  if (backToAddressBtn && !backToAddressBtn.hasAttribute('data-checkout-listener')) {
+    backToAddressBtn.addEventListener('click', () => showCheckoutStep(1));
+    backToAddressBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  const continueToPaymentBtn = ui.qs('#continueToPaymentBtn');
+  if (continueToPaymentBtn && !continueToPaymentBtn.hasAttribute('data-checkout-listener')) {
+    continueToPaymentBtn.addEventListener('click', () => {
+      console.log('Avanzando al paso 3');
+      showCheckoutStep(3);
+    });
+    continueToPaymentBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  // Opciones de entrega
+  ui.qsa('.delivery-option').forEach(option => {
+    if (!option.hasAttribute('data-checkout-listener')) {
+      option.addEventListener('click', () => {
+        ui.qsa('.delivery-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        checkoutData.delivery = option.dataset.delivery;
+        updateCheckoutSummary();
+      });
+      option.setAttribute('data-checkout-listener', 'true');
+    }
+  });
+  
+  // Paso 3: Pago
+  const backToDeliveryBtn = ui.qs('#backToDeliveryBtn');
+  if (backToDeliveryBtn && !backToDeliveryBtn.hasAttribute('data-checkout-listener')) {
+    backToDeliveryBtn.addEventListener('click', () => showCheckoutStep(2));
+    backToDeliveryBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  const completeOrderBtn = ui.qs('#completeOrderBtn');
+  if (completeOrderBtn && !completeOrderBtn.hasAttribute('data-checkout-listener')) {
+    completeOrderBtn.addEventListener('click', completeOrder);
+    completeOrderBtn.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  // Los event listeners de pago y entrega se configuran en setupStepEventListeners
+  
+  // Formatear número de tarjeta
+  const cardNumber = ui.qs('#cardNumber');
+  if (cardNumber && !cardNumber.hasAttribute('data-checkout-listener')) {
+    cardNumber.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+      let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+      e.target.value = formattedValue;
+    });
+    cardNumber.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  // Formatear fecha de vencimiento
+  const expiryDate = ui.qs('#expiryDate');
+  if (expiryDate && !expiryDate.hasAttribute('data-checkout-listener')) {
+    expiryDate.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+      }
+      e.target.value = value;
+    });
+    expiryDate.setAttribute('data-checkout-listener', 'true');
+  }
+  
+  // Solo números para CVV
+  const cvv = ui.qs('#cvv');
+  if (cvv && !cvv.hasAttribute('data-checkout-listener')) {
+    cvv.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+    cvv.setAttribute('data-checkout-listener', 'true');
+  }
+}
+
+// Validar formulario de dirección
+function validateAddressForm() {
+  const requiredFields = ['firstName', 'lastName', 'address', 'city', 'postalCode', 'phone'];
+  let isValid = true;
+  
+  requiredFields.forEach(fieldId => {
+    const field = ui.qs(`#${fieldId}`);
+    if (field && !field.value.trim()) {
+      field.style.borderColor = '#ef4444';
+      isValid = false;
+    } else if (field) {
+      field.style.borderColor = '';
+    }
+  });
+  
+  if (!isValid) {
+    alert('Por favor completa todos los campos requeridos');
+  } else {
+    // Guardar datos de dirección
+    checkoutData.address = {
+      firstName: ui.qs('#firstName').value,
+      lastName: ui.qs('#lastName').value,
+      address: ui.qs('#address').value,
+      city: ui.qs('#city').value,
+      postalCode: ui.qs('#postalCode').value,
+      phone: ui.qs('#phone').value
+    };
+  }
+  
+  return isValid;
+}
+
+// Actualizar resumen del pedido
+function updateCheckoutSummary() {
+  const items = cart.get();
+  const summaryItems = ui.qs('#checkoutSummaryItems');
+  
+  if (summaryItems) {
+    summaryItems.innerHTML = items.map(item => `
+      <div class="summary-item">
+        <img src="${item.image || '/img/placeholder.png'}" alt="${item.name}">
+        <div class="summary-item-info">
+          <div class="summary-item-name">${item.name}</div>
+          <div class="summary-item-details">Cantidad: ${item.quantity}</div>
+        </div>
+        <div class="summary-item-price">${ui.money(item.price * item.quantity)}</div>
+      </div>
+    `).join('');
+  }
+  
+  // Calcular totales
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subtotal * 0.08; // 8% de impuesto
+  const shipping = getShippingCost();
+  const total = subtotal + tax + shipping;
+  
+  // Actualizar totales en el resumen
+  ui.qs('#checkoutSubtotal') && (ui.qs('#checkoutSubtotal').textContent = ui.money(subtotal));
+  ui.qs('#checkoutTax') && (ui.qs('#checkoutTax').textContent = ui.money(tax));
+  ui.qs('#checkoutShipping') && (ui.qs('#checkoutShipping').textContent = ui.money(shipping));
+  ui.qs('#checkoutTotal') && (ui.qs('#checkoutTotal').textContent = ui.money(total));
+}
+
+// Obtener costo de envío
+function getShippingCost() {
+  switch (checkoutData.delivery) {
+    case 'express': return 9.99;
+    case 'standard': return 4.99;
+    case 'pickup': return 0;
+    default: return 4.99;
+  }
+}
+
+// Completar pedido
+async function completeOrder() {
+  console.log('Iniciando proceso de completar pedido...');
+  
+  // Validar dirección primero
+  if (!validateAddressForm()) {
+    console.log('Dirección inválida, regresando al paso 1');
+    showCheckoutStep(1);
+    return;
+  }
+  
+  // Validar datos de pago si es tarjeta
+  if (checkoutData.payment === 'card') {
+    console.log('Validando datos de tarjeta...');
+    const cardFields = ['cardNumber', 'expiryDate', 'cvv', 'cardName'];
+    let isValid = true;
+    
+    cardFields.forEach(fieldId => {
+      const field = ui.qs(`#${fieldId}`);
+      if (field && !field.value.trim()) {
+        field.style.borderColor = '#ef4444';
+        isValid = false;
+      } else if (field) {
+        field.style.borderColor = '';
+      }
+    });
+    
+    if (!isValid) {
+      alert('Por favor completa todos los datos de la tarjeta');
+      return;
+    }
+    
+    // Guardar datos de tarjeta
+    checkoutData.cardData = {
+      number: ui.qs('#cardNumber').value,
+      expiry: ui.qs('#expiryDate').value,
+      cvv: ui.qs('#cvv').value,
+      name: ui.qs('#cardName').value
+    };
+    console.log('Datos de tarjeta guardados');
+  }
+  
+  try {
+    console.log('Obteniendo items del carrito...');
+    const items = cart.get();
+    console.log('Items del carrito:', items);
+    
+    if (!items || items.length === 0) {
+      alert('No hay productos en el carrito');
+      return;
+    }
+    
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.08;
+    const shipping = getShippingCost();
+    const total = subtotal + tax + shipping;
+    
+    console.log('Cálculos:', { subtotal, tax, shipping, total });
+    
+    const payload = items.map(i => ({ 
+      productId: i.productId, 
+      quantity: i.quantity,
+      price: i.price
+    }));
+    
+    console.log('Payload para API:', payload);
+    
+    const currentUser = auth.getCurrentUser();
+    console.log('Usuario actual:', currentUser);
+    
+    if (!currentUser) {
+      alert('Error: Usuario no autenticado');
+      return;
+    }
+    
+    console.log('Enviando pedido a la API...');
+    console.log('Datos del checkout ANTES de enviar:', {
+      payment: checkoutData.payment,
+      delivery: checkoutData.delivery,
+      shipping: shipping,
+      checkoutData: checkoutData
+    });
+    
+    console.log('Datos del checkout antes de enviar:', {
+      payment: checkoutData.payment,
+      delivery: checkoutData.delivery,
+      shipping: shipping,
+      payload: payload
+    });
+    
+    const order = await api.createOrder(payload, currentUser.id, checkoutData.payment, checkoutData.delivery, shipping);
+    console.log('Pedido creado:', order);
+    
+    // Mostrar confirmación
+    alert(`🎉 ¡Pedido completado exitosamente!\n\n📦 Pedido #${order.id}\n💰 Total: ${ui.money(total)}\n🚚 Método: ${getDeliveryMethodName()}\n💳 Pago: ${getPaymentMethodName()}\n\n¡Gracias por tu compra!`);
+    
+    // Limpiar carrito y cerrar modal
+    cart.clear();
+    ui.renderCart();
+    ui.updateCartBadge();
+    closeCheckoutModal();
+    
+    // Recargar productos si estamos en la página principal
+    if (typeof loadProducts === 'function') {
+      loadProducts();
+    }
+    
+  } catch (error) {
+    console.error('Error completando pedido:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      checkoutData: checkoutData
+    });
+    alert(`Error al procesar el pedido: ${error.message}\n\nIntenta nuevamente.`);
+  }
+}
+
+// Obtener nombre del método de entrega
+function getDeliveryMethodName() {
+  switch (checkoutData.delivery) {
+    case 'express': return 'Entrega Express (1-2 horas)';
+    case 'standard': return 'Entrega Estándar (Mismo día)';
+    case 'pickup': return 'Recoger en Tienda';
+    default: return 'Entrega Estándar';
+  }
+}
+
+// Obtener nombre del método de pago
+function getPaymentMethodName() {
+  switch (checkoutData.payment) {
+    case 'card': return 'Tarjeta de Crédito';
+    case 'cash': return 'Contra Entrega';
+    default: return 'Tarjeta de Crédito';
   }
 }
 

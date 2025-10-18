@@ -4,7 +4,7 @@ const path = require('path');
 const { db, migrate } = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 54112;
 
 // Middlewares
 app.use(cors());
@@ -106,20 +106,35 @@ app.get('/api/orders', (req, res) => {
 });
 
 app.post('/api/orders', (req, res) => {
-  const { items, userId } = req.body; // [{ productId, quantity, price }, userId]
+  console.log('REQ.BODY COMPLETO:', req.body);
+  
+  const { items, userId, paymentMethod, deliveryMethod, shippingCost } = req.body;
+  
+  console.log('Datos recibidos en /api/orders:', {
+    items: items?.length,
+    userId,
+    paymentMethod,
+    deliveryMethod,
+    shippingCost
+  });
+  
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items es requerido' });
+  }
+  
+  if (!paymentMethod || !deliveryMethod || !shippingCost) {
+    return res.status(400).json({ error: 'paymentMethod, deliveryMethod y shippingCost son requeridos' });
   }
 
   const getForUpdate = db.prepare('SELECT * FROM products WHERE id = ?');
   const updateStock = db.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
-  const insertOrder = db.prepare('INSERT INTO orders (total, user_id, status) VALUES (?, ?, ?)');
+  const insertOrder = db.prepare('INSERT INTO orders (total, user_id, status, payment_method, delivery_method, shipping_cost) VALUES (?, ?, ?, ?, ?, ?)');
   const insertItem = db.prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
 
   try {
     const transaction = db.transaction(() => {
-      let total = 0;
-      // Validar stock y calcular total usando precio del carrito (con descuento)
+      // Calcular subtotal para validación
+      let subtotal = 0;
       for (const it of items) {
         const p = getForUpdate.get(it.productId);
         if (!p) throw new Error(`Producto ${it.productId} no existe`);
@@ -129,9 +144,23 @@ app.post('/api/orders', (req, res) => {
         
         // Usar precio del carrito (ya con descuento aplicado) si está disponible
         const itemPrice = it.price ? Number(it.price) : p.price;
-        total += itemPrice * qty;
+        subtotal += itemPrice * qty;
       }
-      const orderInfo = insertOrder.run(total, userId, 'completed');
+      
+      // Calcular total con impuestos y envío
+      const tax = subtotal * 0.08; // 8% de impuesto
+      const total = subtotal + tax + shippingCost;
+      console.log('Insertando orden con datos:', {
+        subtotal,
+        tax,
+        shippingCost,
+        total,
+        userId,
+        paymentMethod,
+        deliveryMethod
+      });
+      
+      const orderInfo = insertOrder.run(total, userId, 'completed', paymentMethod, deliveryMethod, shippingCost);
       const orderId = orderInfo.lastInsertRowid;
       for (const it of items) {
         const p = getForUpdate.get(it.productId);
@@ -263,10 +292,17 @@ app.get('/api/orders/:userId', (req, res) => {
     FROM orders o
     LEFT JOIN order_items oi ON o.id = oi.order_id
     LEFT JOIN products p ON oi.product_id = p.id
-    WHERE o.user_id = ?
+    WHERE o.user_id = ? AND o.deleted = 0
     GROUP BY o.id
     ORDER BY o.created_at DESC
   `).all(userId);
+  
+  console.log('Pedidos devueltos para usuario', userId, ':', orders.map(o => ({
+    id: o.id,
+    payment_method: o.payment_method,
+    delivery_method: o.delivery_method,
+    shipping_cost: o.shipping_cost
+  })));
   
   res.json(orders);
 });
@@ -281,7 +317,7 @@ app.get('/api/orders/:userId/stats', (req, res) => {
       COALESCE(AVG(total), 0) as avg_order_value,
       MAX(created_at) as last_order_date
     FROM orders 
-    WHERE user_id = ?
+    WHERE user_id = ? AND deleted = 0 AND status = 'completed'
   `).get(userId);
   
   const monthlyStats = db.prepare(`
@@ -290,7 +326,7 @@ app.get('/api/orders/:userId/stats', (req, res) => {
       COUNT(*) as orders_count,
       SUM(total) as total_spent
     FROM orders 
-    WHERE user_id = ? 
+    WHERE user_id = ? AND deleted = 0 AND status = 'completed'
     GROUP BY strftime('%Y-%m', created_at)
     ORDER BY month DESC
     LIMIT 6
@@ -308,7 +344,54 @@ app.get('/api/users/:id', (req, res) => {
   res.json(user);
 });
 
-// Admin Stats API
+// Eliminar pedido individual (soft delete)
+app.delete('/api/orders/:orderId', (req, res) => {
+  const { orderId } = req.params;
+  const { userId } = req.body;
+  
+  console.log('DELETE /api/orders/:orderId - Datos recibidos:', {
+    orderId,
+    userId,
+    body: req.body
+  });
+  
+  try {
+    // Verificar que el pedido pertenece al usuario
+    const order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ? AND deleted = 0').get(orderId, userId);
+    console.log('Pedido encontrado:', order);
+    
+    if (!order) {
+      console.log('Pedido no encontrado o ya eliminado');
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+    
+    // Marcar como eliminado (soft delete)
+    const result = db.prepare('UPDATE orders SET deleted = 1 WHERE id = ?').run(orderId);
+    console.log('Resultado de eliminación:', result);
+    
+    res.json({ success: true, message: 'Pedido eliminado correctamente' });
+  } catch (error) {
+    console.error('Error eliminando pedido:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Eliminar todos los pedidos de un usuario (soft delete)
+app.delete('/api/orders/user/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    // Marcar todos los pedidos del usuario como eliminados
+    const result = db.prepare('UPDATE orders SET deleted = 1 WHERE user_id = ? AND deleted = 0').run(userId);
+    
+    res.json({ 
+      success: true, 
+      message: `${result.changes} pedidos eliminados correctamente` 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 app.get('/api/admin/stats', (req, res) => {
   try {
     // Estadísticas generales (incluyendo compras del admin)
