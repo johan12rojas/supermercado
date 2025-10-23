@@ -2290,9 +2290,15 @@ input:focus,select:focus,textarea:focus{
 }
 
 .footer-logo-img{
-  width:32px;
-  height:32px;
+  width:48px;
+  height:48px;
   object-fit:contain;
+  border-radius:8px;
+  transition:var(--transition);
+}
+
+.footer-logo-img:hover{
+  transform:scale(1.05);
 }
 
 .footer-title{
