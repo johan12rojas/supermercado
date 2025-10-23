@@ -1,166 +1,213 @@
-# 🛒 SuperMercado - Aplicación Web de Delivery
+# 🌱 EcoMarket - Delivery Express
 
-Una aplicación web completa de supermercado con funcionalidades de e-commerce, panel de administración y sistema de autenticación.
-
-## ✨ Características
-
-### 🛍️ Frontend
-- **Interfaz moderna**: Diseño responsive con modo nocturno y ecológico
-- **Catálogo de productos**: 18 productos organizados por categorías
-- **Carrito de compras**: Funcionalidad completa de agregar/quitar productos
-- **Búsqueda**: Filtrado por nombre y categoría
-- **Modos de visualización**: 
-  - 🌙 Modo nocturno
-  - 🌱 Modo ecológico (destaca productos eco-friendly)
-
-### 🔐 Autenticación
-- **Login/Registro**: Sistema de autenticación con tabs dinámicos
-- **Acceso administrativo**: Panel restringido para administradores
-- **Credenciales admin**: `admin@gmail.com` / `admin1234`
-
-### 🛠️ Panel de Administración
-- **Gestión de productos**: Crear, editar, eliminar productos
-- **Búsqueda avanzada**: Filtrar por nombre y categoría
-- **Clasificación ecológica**: Marcar productos como eco-friendly
-- **Inventario**: Control de stock y precios
-
-### 🗄️ Backend
-- **API RESTful**: Endpoints para productos y órdenes
-- **Base de datos SQLite**: Almacenamiento local con `better-sqlite3`
-- **Servidor Express**: API robusta y escalable
-
-## 🚀 Instalación y Uso
-
-### Prerrequisitos
-- Node.js (versión 14 o superior)
-- npm o yarn
-
-### Instalación
-```bash
-# Clonar el repositorio
-git clone https://github.com/johan12rojas/supermercado.git
-cd supermercado
-
-# Instalar dependencias
-npm install
-
-# Poblar la base de datos con productos de ejemplo
-npm run seed
-
-# Iniciar el servidor de desarrollo
-npm run dev
-```
-
-### Scripts Disponibles
-- `npm start`: Inicia el servidor en producción
-- `npm run dev`: Inicia el servidor con nodemon (desarrollo)
-- `npm run seed`: Pobla la base de datos con productos de ejemplo
-
-## 🌐 Acceso
-
-Una vez iniciado el servidor, la aplicación estará disponible en:
-- **Frontend**: http://localhost:3000
-- **Panel Admin**: http://localhost:3000/admin.html
+Sistema de supermercado ecológico con delivery express desarrollado para proyecto universitario.
 
 ## 📁 Estructura del Proyecto
 
 ```
 supermercado/
-├── public/                 # Archivos estáticos del frontend
-│   ├── index.html         # Página principal
-│   ├── admin.html         # Panel de administración
-│   ├── app.js            # Lógica del frontend
-│   └── styles.css        # Estilos CSS
-├── server.js             # Servidor Express
-├── db.js                 # Configuración de base de datos
-├── seed.js               # Datos de ejemplo
-├── package.json          # Dependencias del proyecto
-└── README.md             # Este archivo
+├── 📁 assets/           # Recursos estáticos (imágenes, iconos)
+│   └── 📁 img/         # Imágenes del proyecto
+├── 📁 css/             # Archivos de estilos CSS
+│   └── styles.css      # Estilos principales del sistema
+├── 📁 js/              # Archivos JavaScript
+│   ├── app.js          # Lógica principal de la aplicación
+│   ├── app-fixed.js    # Versión corregida del app.js
+│   └── app-simple.js   # Versión simplificada del app.js
+├── 📁 views/           # Archivos HTML (vistas)
+│   ├── index.html      # Página principal
+│   ├── admin.html      # Panel de administración
+│   ├── profile.html    # Perfil de usuario
+│   ├── design-system.html # Sistema de diseño
+│   └── ...             # Otras páginas HTML
+├── 📁 node_modules/    # Dependencias de Node.js
+├── 📄 server.js        # Servidor Express
+├── 📄 db.js            # Configuración de base de datos
+├── 📄 package.json     # Configuración del proyecto
+├── 📄 database-schema.dbml # Esquema de base de datos
+└── 📄 README.md        # Este archivo
 ```
 
-## 🎨 Tecnologías Utilizadas
+## 🚀 Instalación y Ejecución
 
-### Frontend
-- **HTML5**: Estructura semántica
-- **CSS3**: Estilos modernos con variables CSS y responsive design
-- **JavaScript ES6+**: Lógica del cliente con async/await
+### Prerrequisitos
+- Node.js (versión 14 o superior)
+- npm
 
-### Backend
-- **Node.js**: Runtime de JavaScript
-- **Express.js**: Framework web
-- **SQLite**: Base de datos local
-- **better-sqlite3**: Driver de base de datos
+### Pasos de instalación
 
-### Características Técnicas
-- **Responsive Design**: Adaptable a móviles y tablets
-- **Modo Oscuro**: Tema nocturno con colores optimizados
-- **Modo Ecológico**: Destacado de productos eco-friendly
-- **Local Storage**: Persistencia de carrito y preferencias
-- **API RESTful**: Endpoints bien estructurados
+1. **Clonar o descargar el proyecto**
+   ```bash
+   git clone [URL_DEL_REPOSITORIO]
+   cd supermercado
+   ```
 
-## 🔧 Funcionalidades Detalladas
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
 
-### Sistema de Productos
-- **18 productos** distribuidos en 6 categorías
-- **Imágenes reales** de Unsplash
-- **Clasificación ecológica** con badges especiales
-- **Control de stock** y precios
+3. **Ejecutar el servidor**
+   ```bash
+   npm start
+   ```
 
-### Carrito de Compras
-- **Persistencia local**: Se mantiene entre sesiones
-- **Cantidades dinámicas**: Añadir/quitar productos
-- **Cálculo automático**: Total dinámico
-- **Checkout simulado**: Proceso de compra completo
+4. **Abrir en el navegador**
+   ```
+   http://localhost:3000
+   ```
 
-### Panel de Administración
-- **CRUD completo**: Crear, leer, actualizar, eliminar productos
-- **Búsqueda en tiempo real**: Por nombre y categoría
-- **Validación de formularios**: Campos obligatorios
-- **Interfaz intuitiva**: Diseño profesional
+## 🌐 Despliegue en Vercel
 
-## 🌱 Modo Ecológico
+### Opción 1: Despliegue desde GitHub (Recomendado)
 
-El modo ecológico activa:
-- **Paleta de colores verde**: Tema ambiental
-- **Badges especiales**: 🌿 Eco en productos eco-friendly
-- **Filtrado visual**: Destacado de productos sostenibles
+1. **Sube tu proyecto a GitHub:**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/tu-usuario/supermercado.git
+   git push -u origin main
+   ```
 
-## 🌙 Modo Nocturno
+2. **Conecta con Vercel:**
+   - Ve a [vercel.com](https://vercel.com)
+   - Haz clic en "New Project"
+   - Importa tu repositorio de GitHub
+   - Vercel detectará automáticamente la configuración
 
-El modo nocturno incluye:
-- **Colores oscuros**: Fondo y elementos adaptados
-- **Contraste optimizado**: Legibilidad mejorada
-- **Imagen del hero**: Menos oscura para mejor visibilidad
-- **Transiciones suaves**: Cambios elegantes entre modos
+### Opción 2: Despliegue con Vercel CLI
+
+1. **Instala Vercel CLI:**
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Despliega:**
+   ```bash
+   vercel
+   ```
+
+3. **Para producción:**
+   ```bash
+   vercel --prod
+   ```
+
+### Archivos de Configuración para Vercel
+
+El proyecto incluye:
+- `vercel.json` - Configuración de despliegue
+- `.vercelignore` - Archivos a excluir del despliegue
+- Configuración automática para Node.js
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Node.js, Express.js
+- **Base de Datos**: SQLite (desarrollo) / MySQL (producción)
+- **Estilos**: CSS Variables, Flexbox, Grid
+- **Iconos**: Emojis nativos
+
+## 📋 Funcionalidades Principales
+
+### Para Usuarios
+- 🌱 **Modo Ecológico**: Interfaz verde para productos eco-friendly
+- 🛒 **Carrito de Compras**: Agregar, modificar y eliminar productos
+- 📦 **Proceso de Compra**: Checkout en 3 pasos (Dirección, Entrega, Pago)
+- 👤 **Perfil de Usuario**: Historial de pedidos y estadísticas
+- 🔍 **Búsqueda**: Filtrado por categorías y texto
+
+### Para Administradores
+- 📊 **Panel de Control**: Estadísticas de ventas y productos
+- 🛍️ **Gestión de Productos**: CRUD completo de productos
+- 📈 **Monitoreo de Stock**: Control de inventario
+- 📋 **Gestión de Pedidos**: Administración de órdenes
+
+## 🎨 Sistema de Diseño
+
+El proyecto incluye un sistema de diseño completo (`design-system.html`) que define:
+
+- **Paleta de Colores**: Colores primarios, secundarios y modo eco
+- **Tipografía**: Fuentes y jerarquías tipográficas
+- **Componentes**: Botones, formularios, tarjetas, modales
+- **Layout**: Grid system y componentes de navegación
+- **Logotipos**: Variaciones del logo EcoMarket
+
+## 🗄️ Base de Datos
+
+### Tablas Principales
+- **products**: Catálogo de productos
+- **users**: Usuarios del sistema
+- **orders**: Pedidos realizados
+- **order_items**: Items de cada pedido
+- **categories**: Categorías de productos
+
+### Características
+- Soft delete para pedidos
+- Índices optimizados para consultas
+- Relaciones bien definidas entre tablas
+
+## 🔧 Configuración del Servidor
+
+El servidor Express está configurado para servir archivos estáticos desde múltiples directorios:
+
+- `/css` → Archivos CSS
+- `/js` → Archivos JavaScript  
+- `/views` → Archivos HTML
+- `/assets` → Recursos estáticos (imágenes)
 
 ## 📱 Responsive Design
 
-La aplicación es completamente responsive:
-- **Mobile First**: Optimizada para móviles
-- **Breakpoints**: Adaptación a tablets y desktop
-- **Grid flexible**: Layouts que se adaptan al contenido
-- **Touch friendly**: Botones y elementos táctiles
+El sistema está diseñado para ser completamente responsive:
+- Mobile-first approach
+- Breakpoints para tablet y desktop
+- Componentes adaptativos
+
+## 🌍 Modo Ecológico
+
+Característica única del sistema que cambia la interfaz a colores verdes cuando se activa, promoviendo productos eco-friendly y prácticas sostenibles.
+
+## 📊 API Endpoints
+
+### Productos
+- `GET /api/products` - Listar productos
+- `POST /api/products` - Crear producto
+- `PUT /api/products/:id` - Actualizar producto
+- `DELETE /api/products/:id` - Eliminar producto
+
+### Usuarios
+- `POST /api/auth/register` - Registro de usuario
+- `POST /api/auth/login` - Inicio de sesión
+
+### Pedidos
+- `GET /api/orders` - Listar pedidos
+- `POST /api/orders` - Crear pedido
+- `GET /api/orders/:userId` - Pedidos por usuario
+
+## 🎯 Objetivos del Proyecto
+
+Este proyecto fue desarrollado como parte de un trabajo universitario para demostrar:
+- Arquitectura web moderna
+- Buenas prácticas de desarrollo
+- Diseño centrado en el usuario
+- Responsabilidad ambiental en tecnología
+
+## 📝 Notas de Desarrollo
+
+- El proyecto está optimizado para desarrollo local
+- La base de datos se inicializa automáticamente
+- Los datos de prueba se cargan con el comando `npm run seed`
+- El sistema incluye validaciones tanto en frontend como backend
 
 ## 🤝 Contribuciones
 
-Las contribuciones son bienvenidas. Para contribuir:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+Este es un proyecto académico, pero las sugerencias y mejoras son bienvenidas.
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia ISC. Ver el archivo `package.json` para más detalles.
-
-## 👨‍💻 Autor
-
-**Johan Rojas**
-- GitHub: [@johan12rojas](https://github.com/johan12rojas)
-- Repositorio: [supermercado](https://github.com/johan12rojas/supermercado)
+Proyecto desarrollado para fines educativos universitarios.
 
 ---
 
-¡Disfruta usando SuperMercado! 🛒✨
+**EcoMarket** - Tu supermercado ecológico de confianza 🌱

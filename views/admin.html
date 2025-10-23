@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel de Administración - EcoMarket</title>
-  <link rel="icon" type="image/png" href="/img/carritologo.png">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/png" href="/assets/img/carritologo.png">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <header class="header-app">
@@ -13,7 +13,7 @@
       <div class="header-row">
         <div class="logo">
           <div class="logo-icon">
-            <img src="/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
+            <img src="/assets/img/carritologo.png" alt="SuperMercado Logo" class="logo-img">
           </div>
           <div class="logo-text">
             <div class="title">EcoMarket</div>
@@ -28,7 +28,7 @@
           <a class="icon" href="/" title="Inicio">🏠</a>
           <a class="icon" id="themeToggle" title="Modo Nocturno">🌙</a>
           <a class="icon" id="ecoToggle" title="Modo Ecológico">🌱</a>
-          <a class="icon" href="/profile.html" title="Perfil">👤</a>
+          <a class="icon" href="/views/profile.html" title="Perfil">👤</a>
           <button class="btn" id="logoutBtn">Cerrar sesión</button>
         </nav>
       </div>
@@ -90,8 +90,14 @@
             <input id="categoryDescription" type="text" placeholder="Descripción opcional">
           </div>
           <div class="form-row">
-            <button class="btn primary" id="addCategory">Añadir Categoría</button>
-            <button class="btn" id="resetCategory">Limpiar</button>
+            <button class="btn primary" id="addCategory">
+              <span class="btn-icon">➕</span>
+              Añadir Categoría
+            </button>
+            <button class="btn" id="resetCategory">
+              <span class="btn-icon">🔄</span>
+              Limpiar Formulario
+            </button>
           </div>
         </div>
         <div class="categories-list">
@@ -112,7 +118,7 @@
           <h2>Crear / Editar Producto</h2>
           <div class="card-icon">📦</div>
         </div>
-        <form id="productForm" class="admin-form">
+        <form id="productForm" class="admin-form" method="POST" action="#">
           <input type="hidden" id="productId">
           
           <div class="form-row">
@@ -178,7 +184,7 @@
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input id="isEco" name="isEco" type="checkbox">
+              <input id="isEcoCheckbox" name="isEco" type="checkbox">
               <span class="checkmark"></span>
               Producto Ecológico 🌿
             </label>
@@ -196,12 +202,14 @@
           </div>
         </form>
       </section>
+    </div>
 
-      <section class="admin-card">
-        <div class="card-header">
-          <h2>Inventario de Productos</h2>
-          <div class="card-icon">📋</div>
-        </div>
+    <!-- Inventario de Productos - Fuera del grid para tener todo el ancho -->
+    <section class="admin-card full-width">
+      <div class="card-header">
+        <h2>Inventario de Productos</h2>
+        <div class="card-icon">📋</div>
+      </div>
         <!-- Resumen de Stock -->
         <div class="stock-summary">
           <div class="summary-card stock-empty-summary">
@@ -254,7 +262,7 @@
     <div class="footer-content">
       <div class="footer-brand">
         <div class="footer-logo">
-          <img src="/img/carritologo.png" alt="EcoMarket Logo" class="footer-logo-img">
+          <img src="/assets/img/carritologo.png" alt="EcoMarket Logo" class="footer-logo-img">
           <span class="footer-title">EcoMarket</span>
         </div>
         <p class="footer-tagline">🍃 Tu supermercado ecológico de confianza 🌱</p>
@@ -266,7 +274,7 @@
     </div>
   </footer>
 
-  <script src="/app.js"></script>
+  <script src="/js/app.js"></script>
   <script>
     // Script específico para la página de administración
     document.addEventListener('DOMContentLoaded', function() {
@@ -331,6 +339,24 @@
           window.location.href = '/';
         }
       });
+      
+      // Cargar datos iniciales
+      loadAdminData();
+    }
+    
+    // Función para cargar datos del panel de administración
+    async function loadAdminData() {
+      try {
+        // Cargar categorías
+        await loadCategories();
+        
+        // Cargar productos
+        await loadAdminProducts();
+        
+        console.log('Datos del admin cargados correctamente');
+      } catch (error) {
+        console.error('Error cargando datos del admin:', error);
+      }
     }
   </script>
 </body>

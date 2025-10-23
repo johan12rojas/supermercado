@@ -1288,6 +1288,16 @@ input:focus,select:focus,textarea:focus{
   background:#334155;
 }
 
+[data-theme="dark"] .btn.secondary{
+  background:#334155;
+  border-color:#475569;
+  color:#f1f5f9;
+}
+
+[data-theme="dark"] .btn.secondary:hover{
+  background:#475569;
+}
+
 [data-theme="dark"] .card{
   background:#1e293b;
   border-color:#334155;
@@ -1366,18 +1376,18 @@ input:focus,select:focus,textarea:focus{
 }
 
 [data-theme="dark"] .admin-card{
-  background:#1e293b;
-  border-color:#334155;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme="dark"] .card-header{
-  background:#0f172a;
-  border-color:#334155;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] .table-header{
-  background:#0f172a;
-  border-color:#334155;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Indicadores de Stock */
@@ -1445,7 +1455,7 @@ input:focus,select:focus,textarea:focus{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
+  margin: 24px 0;
   padding: 0 24px;
 }
 
@@ -1603,6 +1613,11 @@ input:focus,select:focus,textarea:focus{
 
 [data-theme="dark"] .auth-tab:hover:not(.active){
   background:#334155;
+}
+
+/* Modo oscuro para contenedores de inventario */
+[data-theme="dark"] .categories-list{
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Modo ecológico */
@@ -1921,9 +1936,12 @@ input:focus,select:focus,textarea:focus{
 
 .admin-grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:2fr 1fr;
   gap:32px;
   margin:32px 0;
+  max-width: 2000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .admin-card{
@@ -2007,9 +2025,22 @@ input:focus,select:focus,textarea:focus{
 }
 
 .form-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+  display:flex;
+  gap:16px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.form-row .btn{
+  min-width: 140px;
+  padding: 12px 20px;
+  font-size: 14px;
+  white-space: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .form-group{
@@ -2066,6 +2097,17 @@ input:focus,select:focus,textarea:focus{
   display:flex;
   gap:16px;
   margin-top:32px;
+  justify-content: center;
+}
+
+.form-actions .btn{
+  min-width: 160px;
+  padding: 14px 24px;
+  font-size: 15px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon{
@@ -2082,16 +2124,35 @@ input:focus,select:focus,textarea:focus{
   background:#e2e8f0;
 }
 
+.admin-card.full-width{
+  background:var(--bg);
+  border:2px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:32px;
+  box-shadow:var(--shadow);
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  margin: 32px 0;
+}
+
 .products-table{
   padding:0;
+  overflow-x: auto;
+  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+  border-radius: 8px;
+  padding: 24px;
 }
 
 .table-header{
   display:grid;
-  grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.5fr;
-  gap:16px;
-  padding:20px 32px;
-  background:var(--bg);
+  grid-template-columns: 120px 2fr 100px 80px 1.5fr 100px 140px;
+  gap:20px;
+  padding:20px 0;
+  background:transparent;
   border-bottom:2px solid var(--line);
   font-weight:700;
   font-size:14px;
@@ -2105,16 +2166,38 @@ input:focus,select:focus,textarea:focus{
 
 .table-item{
   display:grid;
-  grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.5fr;
-  gap:16px;
+  grid-template-columns: 120px 2fr 100px 80px 1.5fr 100px 140px;
+  gap:20px;
   padding:20px 32px;
   border-bottom:1px solid var(--line);
   align-items:center;
   transition:var(--transition);
 }
 
-.table-item:hover{
-  background:#f8fafc;
+.table-item span{
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.table-item .product-image{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.table-item span:nth-child(3){
+  text-align: center;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.table-item span:nth-child(4){
+  text-align: center;
+}
+
+.table-item span:nth-child(6){
+  text-align: center;
 }
 
 .table-item:last-child{
@@ -2129,11 +2212,29 @@ input:focus,select:focus,textarea:focus{
 .table-actions{
   display:flex;
   gap:8px;
+  justify-content: center;
 }
 
 .table-actions .btn{
   padding:8px 12px;
   font-size:12px;
+  min-width: 40px;
+}
+
+.product-image img{
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--line);
+}
+
+.stock-indicator{
+  text-align: center;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 @media (max-width:1024px){
@@ -3253,14 +3354,45 @@ input:focus,select:focus,textarea:focus{
 /* Lista de categorías */
 .categories-list{
   margin-top:24px;
+  padding: 0 32px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  padding: 24px 32px;
 }
 
 .categories-list .table-header{
-  grid-template-columns:1fr 1fr 1fr;
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 150px;
+  gap: 20px;
+  padding: 20px 0;
+  background: transparent;
+  border-bottom: 2px solid var(--line);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
 }
 
-.categories-list .table-item{
-  grid-template-columns:1fr 1fr 1fr;
+.categories-list .table-row{
+  display: grid;
+  grid-template-columns: 1.5fr 2fr 150px;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+}
+
+.categories-list .table-row span{
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.categories-list .table-actions{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Responsive */

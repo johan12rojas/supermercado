@@ -4,15 +4,24 @@ const path = require('path');
 const { db, migrate } = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 54112;
+const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/views', express.static(path.join(__dirname, 'views')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // Ensure schema
 migrate();
+
+// Ruta principal - redirigir a index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
+});
 
 // Helpers
 function getProductById(productId) {
@@ -247,6 +256,14 @@ app.get('/api/categories', (req, res) => {
   res.json(categories);
 });
 
+app.get('/api/categories/:id', (req, res) => {
+  const category = getCategoryById(req.params.id);
+  if (!category) {
+    return res.status(404).json({ error: 'Categoría no encontrada' });
+  }
+  res.json(category);
+});
+
 app.post('/api/categories', (req, res) => {
   const { name, description } = req.body;
   if (!name) {
@@ -472,8 +489,14 @@ app.get('/api/admin/stats', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+// Solo iniciar el servidor si no estamos en Vercel
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  });
+}
+
+// Exportar para Vercel
+module.exports = app;
 
 

@@ -1,0 +1,17 @@
+node_modules
+*.log
+.env
+.env.local
+.env.production
+.DS_Store
+*.db
+*.sqlite
+*.sqlite3
+test.html
+debug-simple.html
+working.html
+app-fixed.js
+app-simple.js
+seed.js
+REQUERIMIENTOS.md
+database-schema.dbml

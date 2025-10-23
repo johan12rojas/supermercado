@@ -1610,7 +1610,7 @@ function updateCheckoutSummary() {
     } else {
       console.log('Renderizando', items.length, 'productos');
       summaryItems.innerHTML = items.map(item => {
-        const imageSrc = item.image && item.image.trim() !== '' ? item.image : '/img/placeholder.png';
+        const imageSrc = item.image && item.image.trim() !== '' ? item.image : '/assets/img/placeholder.png';
         console.log('Item en resumen:', { 
           name: item.name, 
           image: imageSrc, 
@@ -1621,7 +1621,7 @@ function updateCheckoutSummary() {
         
         return `
           <div class="summary-item">
-            <img src="${imageSrc}" alt="${item.name}" onerror="this.src='/img/placeholder.png'">
+            <img src="${imageSrc}" alt="${item.name}" onerror="this.src='/assets/img/placeholder.png'">
             <div class="summary-item-info">
               <div class="summary-item-name">${item.name}</div>
               <div class="summary-item-details">Cantidad: ${item.quantity}</div>
@@ -1875,6 +1875,7 @@ async function bootAdmin() {
       addCategoryBtn.addEventListener('click', async () => {
         const name = ui.qs('#categoryName')?.value;
         const description = ui.qs('#categoryDescription')?.value;
+        const editingId = addCategoryBtn.dataset.editingId;
         
         if (!name) {
           alert('El nombre de la categoría es requerido');
@@ -1882,14 +1883,26 @@ async function bootAdmin() {
         }
         
         try {
-          await api.createCategory({ name, description });
-          alert('Categoría creada exitosamente');
+          if (editingId) {
+            // Actualizar categoría existente
+            await api.updateCategory(editingId, { name, description });
+            alert('Categoría actualizada exitosamente');
+          } else {
+            // Crear nueva categoría
+            await api.createCategory({ name, description });
+            alert('Categoría creada exitosamente');
+          }
+          
           await loadCategories();
           ui.qs('#categoryName').value = '';
           ui.qs('#categoryDescription').value = '';
+          
+          // Resetear el botón
+          addCategoryBtn.textContent = 'Añadir Categoría';
+          delete addCategoryBtn.dataset.editingId;
         } catch (error) {
-          console.error('Error creando categoría:', error);
-          alert('Error al crear categoría: ' + error.message);
+          console.error('Error procesando categoría:', error);
+          alert('Error al procesar categoría: ' + error.message);
         }
       });
     }
@@ -1898,13 +1911,23 @@ async function bootAdmin() {
       resetCategoryBtn.addEventListener('click', () => {
         ui.qs('#categoryName').value = '';
         ui.qs('#categoryDescription').value = '';
+        
+        // Resetear el botón de añadir
+        const addBtn = ui.qs('#addCategory');
+        if (addBtn) {
+          addBtn.textContent = 'Añadir Categoría';
+          delete addBtn.dataset.editingId;
+        }
       });
     }
     
     // Event listener para formulario de productos
     const productForm = ui.qs('#productForm');
+    console.log('Formulario encontrado:', productForm);
     if (productForm) {
+      console.log('Registrando event listener para el formulario');
       productForm.addEventListener('submit', async (e) => {
+        console.log('Evento submit interceptado!');
         e.preventDefault();
         
         const formData = new FormData(productForm);
@@ -1915,11 +1938,24 @@ async function bootAdmin() {
           stock: parseInt(formData.get('stock')),
           category: formData.get('category'),
           image: formData.get('image'),
-          isEco: formData.get('isEco') === 'on',
+          isEco: formData.get('isEco') === '1' || formData.get('isEco') === 'on',
           discount: parseFloat(formData.get('discount')) || 0
         };
         
+        console.log('Datos del formulario:', productData);
+        console.log('Valores individuales:', {
+          name: formData.get('name'),
+          description: formData.get('description'),
+          price: formData.get('price'),
+          stock: formData.get('stock'),
+          category: formData.get('category'),
+          image: formData.get('image'),
+          isEco: formData.get('isEco'),
+          discount: formData.get('discount')
+        });
+        
         const productId = ui.qs('#productId')?.value;
+        console.log('Product ID:', productId);
         
         try {
           if (productId) {
@@ -2058,19 +2094,18 @@ async function loadAdminProducts(query = '', category = '') {
     
     if (adminList) {
       adminList.innerHTML = products.map(product => `
-        <div class="table-row">
+        <div class="table-item">
           <div class="product-image">
-            <img src="${product.image || ''}" alt="${product.name}" loading="lazy">
+            <img src="${product.image || '/assets/img/placeholder.png'}" alt="${product.name}" loading="lazy" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
           </div>
-          <span>${product.name}</span>
-          <span>$${product.price}</span>
+          <span style="font-weight: 600;">${product.name}</span>
+          <span style="font-weight: 600; color: var(--primary);">$${product.price}</span>
           <span class="stock-indicator ${getStockClass(product.stock)}">${product.stock}</span>
           <span>${product.category || '-'}</span>
-          <span>${product.isEco ? '🌿 Sí' : '❌ No'}</span>
-          <span>${product.discount_percentage || 0}%</span>
+          <span style="text-align: center;">${product.isEco ? '🌿 Sí' : '❌ No'}</span>
           <div class="table-actions">
-            <button class="btn" onclick="editProduct(${product.id})">✏️</button>
-            <button class="btn" onclick="deleteProduct(${product.id})" style="background: #ef4444; color: white;">🗑️</button>
+            <button class="btn" onclick="editProduct(${product.id})" title="Editar">✏️</button>
+            <button class="btn" onclick="deleteProduct(${product.id})" style="background: #ef4444; color: white;" title="Eliminar">🗑️</button>
           </div>
         </div>
       `).join('');
@@ -2087,6 +2122,7 @@ async function loadAdminProducts(query = '', category = '') {
 window.editProduct = async function(id) {
   try {
     const product = await api.getProduct(id);
+    console.log('Producto cargado para edición:', product);
     
     ui.qs('#productId').value = product.id;
     ui.qs('#name').value = product.name;
@@ -2095,7 +2131,16 @@ window.editProduct = async function(id) {
     ui.qs('#stock').value = product.stock;
     ui.qs('#category').value = product.category || '';
     ui.qs('#image').value = product.image || '';
-    ui.qs('#isEco').checked = product.isEco == 1;
+    ui.qs('#isEco').value = product.isEco ? '1' : '0';
+    ui.qs('#isEcoCheckbox').checked = product.isEco == 1;
+    ui.qs('#discount').value = product.discount_percentage || 0;
+    
+    console.log('Formulario poblado con:', {
+      id: ui.qs('#productId').value,
+      name: ui.qs('#name').value,
+      stock: ui.qs('#stock').value,
+      discount: ui.qs('#discount').value
+    });
     
     // Scroll to form
     ui.qs('#productForm').scrollIntoView({ behavior: 'smooth' });
@@ -2125,6 +2170,13 @@ window.editCategory = async function(id) {
     ui.qs('#categoryName').value = category.name;
     ui.qs('#categoryDescription').value = category.description || '';
     
+    // Cambiar el botón para indicar que estamos editando
+    const addBtn = ui.qs('#addCategory');
+    if (addBtn) {
+      addBtn.textContent = 'Actualizar Categoría';
+      addBtn.dataset.editingId = id;
+    }
+    
     // Scroll to form
     ui.qs('#categoryName').scrollIntoView({ behavior: 'smooth' });
   } catch (error) {
@@ -2153,10 +2205,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const path = document.location.pathname;
   console.log('Ruta actual:', path);
   
-  if (path === '/admin.html') {
+  if (path === '/admin.html' || path === '/views/admin.html') {
     console.log('Cargando admin...');
     bootAdmin();
-  } else if (path === '/profile.html') {
+  } else if (path === '/profile.html' || path === '/views/profile.html') {
     console.log('Cargando perfil...');
     // Profile has its own script
   } else {
