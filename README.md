@@ -24,7 +24,7 @@ supermercado/
 ├── 📄 server.js        # Servidor Express
 ├── 📄 db.js            # Configuración de base de datos
 ├── 📄 package.json     # Configuración del proyecto
-├── 📄 database-schema.dbml # Esquema de base de datos
+├── 📄 supermercado.db  # Base de datos SQLite
 └── 📄 README.md        # Este archivo
 ```
 
@@ -56,50 +56,6 @@ supermercado/
    ```
    http://localhost:3000
    ```
-
-## 🌐 Despliegue en Vercel
-
-### Opción 1: Despliegue desde GitHub (Recomendado)
-
-1. **Sube tu proyecto a GitHub:**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/tu-usuario/supermercado.git
-   git push -u origin main
-   ```
-
-2. **Conecta con Vercel:**
-   - Ve a [vercel.com](https://vercel.com)
-   - Haz clic en "New Project"
-   - Importa tu repositorio de GitHub
-   - Vercel detectará automáticamente la configuración
-
-### Opción 2: Despliegue con Vercel CLI
-
-1. **Instala Vercel CLI:**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Despliega:**
-   ```bash
-   vercel
-   ```
-
-3. **Para producción:**
-   ```bash
-   vercel --prod
-   ```
-
-### Archivos de Configuración para Vercel
-
-El proyecto incluye:
-- `vercel.json` - Configuración de despliegue
-- `.vercelignore` - Archivos a excluir del despliegue
-- Configuración automática para Node.js
 
 ## 🛠️ Tecnologías Utilizadas
 
