@@ -5,16 +5,22 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:supabase": "node server-supabase.js",
     "dev": "npx nodemon --quiet server.js",
-    "seed": "node seed.js"
+    "dev:supabase": "npx nodemon --quiet server-supabase.js",
+    "seed": "node seed.js",
+    "migrate:supabase": "node migrate-to-supabase.js",
+    "test:supabase": "node test-supabase.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

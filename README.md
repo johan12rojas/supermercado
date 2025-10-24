@@ -49,7 +49,11 @@ supermercado/
 
 3. **Ejecutar el servidor**
    ```bash
+   # Opción 1: Base de datos local (SQLite)
    npm start
+   
+   # Opción 2: Base de datos en la nube (Supabase)
+   npm run start:supabase
    ```
 
 4. **Abrir en el navegador**
@@ -57,12 +61,23 @@ supermercado/
    http://localhost:3000
    ```
 
+### 🔐 Credenciales de Prueba
+
+**Administrador:**
+- Email: `admin@gmail.com`
+- Contraseña: `admin1234`
+
+**Usuario Regular:**
+- Email: `test@test.com`
+- Contraseña: `123456`
+
 ## 🛠️ Tecnologías Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Node.js, Express.js
-- **Base de Datos**: SQLite (desarrollo) / MySQL (producción)
+- **Base de Datos**: SQLite (local) / Supabase PostgreSQL (nube)
 - **Estilos**: CSS Variables, Flexbox, Grid
+- **Cloud**: Supabase (PostgreSQL, Auth, Storage)
 - **Iconos**: Emojis nativos
 
 ## 📋 Funcionalidades Principales
